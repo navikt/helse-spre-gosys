@@ -1,7 +1,7 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  name: spre-arbeidsgiver
+  name: spre-gosys
   namespace: default
   labels:
     team: tbd
@@ -32,7 +32,7 @@ spec:
     enabled: true
     paths:
       - mountPath: /var/run/secrets/nais.io/service_user
-        kvPath: /serviceuser/data/dev/srvsprearbeidsgiver
+        kvPath: /serviceuser/data/dev/srvspregosys
   secureLogs:
     enabled: true
   env:
@@ -41,4 +41,4 @@ spec:
     - name: KAFKA_RAPID_TOPIC
       value: helse-rapid-v1
     - name: KAFKA_CONSUMER_GROUP_ID
-      value: spre-arbeidsgiver-v1
+      value: spre-gosys-v1

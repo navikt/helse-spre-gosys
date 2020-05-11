@@ -1,7 +1,7 @@
-# helse-spre-arbeidsgiver
+# helse-spre-gosys
 
 ## Beskrivelse
-Leser interne meldinger og republiserer til arbeidsgiver
+Snapper opp vedtak fattet av spleis og arkiverer et dokument i joark
 
 ## Kjøretidsavhengigheter
 

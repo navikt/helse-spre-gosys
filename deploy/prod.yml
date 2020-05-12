@@ -43,6 +43,6 @@ spec:
     - name: KAFKA_CONSUMER_GROUP_ID
       value: spre-gosys-v1
     - name: STS_URL
-      value: https://sts.adeo.no/SecurityTokenServiceProvider
+      value: http://security-token-service
     - name: JOARK_BASE_URL
       value: https://dokarkiv.nais.adeo.no

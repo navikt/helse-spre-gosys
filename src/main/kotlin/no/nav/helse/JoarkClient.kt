@@ -20,8 +20,10 @@ class JoarkClient(
             contentType(ContentType.Application.Json)
             body = vedtak.toJournalpostPayload()
         }
-            .execute()
-            .status == HttpStatusCode.OK
+            .execute {
+                it.status == HttpStatusCode.OK
+            }
+
     }
 }
 

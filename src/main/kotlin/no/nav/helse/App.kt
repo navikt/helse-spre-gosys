@@ -27,8 +27,8 @@ fun launchApplication(
     environment: Map<String, String>
 ): RapidsConnection {
     val serviceUser = readServiceUserCredentials()
-    val stsRestClient = StsRestClient(System.getProperty("STS_URL"), serviceUser)
-    val joarkClient = JoarkClient(System.getProperty("JOARK_BASE_URL"), stsRestClient, HttpClient {
+    val stsRestClient = StsRestClient(requireNotNull(environment["STS_URL"]), serviceUser)
+    val joarkClient = JoarkClient(requireNotNull(environment["JOARK_BASE_URL"]), stsRestClient, HttpClient {
         install(JsonFeature) { serializer = JacksonSerializer() }
     })
 

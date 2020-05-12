@@ -61,7 +61,7 @@ class OpprettJournalpostTest {
             engine {
                 addHandler { request ->
                     when (request.url.fullPath) {
-                        "/rest/journalpostapi/v1/journalpost" -> {
+                        "/rest/journalpostapi/v1/journalpost?forsoekFerdigstill=true" -> {
                             capturedRequest = request
                             capturedPayload =  objectMapper.readValue(request.body.toByteArray(), JournalpostPayload::class.java)
                             respond("Hello, world")

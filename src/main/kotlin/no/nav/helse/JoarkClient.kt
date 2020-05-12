@@ -14,7 +14,7 @@ class JoarkClient(
     private val httpClient: HttpClient
 ) {
     suspend fun opprettJournalpost(vedtak: Vedtak): Boolean {
-        return httpClient.post<HttpStatement>("$baseUrl/rest/journalpostapi/v1/journalpost") {
+        return httpClient.post<HttpStatement>("$baseUrl/rest/journalpostapi/v1/journalpost?forsoekFerdigstill=true") {
             header("Nav-Consumer-Token", vedtak.hendelseId.toString())
             header("Authorization", "Bearer ${stsRestClient.token()}")
             contentType(ContentType.Application.Json)

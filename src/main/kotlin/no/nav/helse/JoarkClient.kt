@@ -21,6 +21,7 @@ class JoarkClient(
             body = vedtak.toJournalpostPayload()
         }
             .execute {
+                log.info("Vedtak journalført på aktør: ${vedtak.aktørId}")
                 it.status == HttpStatusCode.OK
             }
 

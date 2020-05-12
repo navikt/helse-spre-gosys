@@ -8,7 +8,8 @@ import java.util.UUID
 private val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
 class Vedtak(
-    private val brukersFnr: String,
+    private val fnr: String,
+    val aktørId: String,
     private val fom: LocalDate,
     private val tom: LocalDate,
     val hendelseId: UUID
@@ -20,7 +21,7 @@ class Vedtak(
 
     fun toJournalpostPayload() = JournalpostPayload(
         tittel = "Vedtak om sykepenger",
-        bruker = Bruker(id = brukersFnr),
+        bruker = Bruker(id = fnr),
         dokumenter = listOf(
             Dokument(
                 tittel = "Vedtak på sykepenger ${formatter.format(fom)}-${formatter.format(tom)}",

@@ -30,6 +30,7 @@ class OpprettJournalpostTest {
     private val mockClient = httpclient()
     private val joark = spyk(JoarkClient("https://url.no", stsMock, mockClient))
     private var capturedRequest: HttpRequestData? = null
+    private var capturedPayload: JournalpostPayload? = null
 
     init {
         OpprettJournalpost(testRapid, joark)
@@ -44,8 +45,7 @@ class OpprettJournalpostTest {
     fun `journalfører et vedtak`() = runBlocking {
         testRapid.sendTestMessage(vedtakV3())
         val request = requireNotNull(capturedRequest)
-        val payload: JournalpostPayload =
-            objectMapper.readValue(request.body.toByteArray(), JournalpostPayload::class.java)
+        val payload = requireNotNull(capturedPayload)
 
         assertEquals("Bearer 6B70C162-8AAB-4B56-944D-7F092423FE4B", request.headers["Authorization"])
         assertEquals("e8eb9ffa-57b7-4fe0-b44c-471b2b306bb6", request.headers["Nav-Consumer-Token"])
@@ -63,6 +63,7 @@ class OpprettJournalpostTest {
                     when (request.url.fullPath) {
                         "/rest/journalpostapi/v1/journalpost" -> {
                             capturedRequest = request
+                            capturedPayload =  objectMapper.readValue(request.body.toByteArray(), JournalpostPayload::class.java)
                             respond("Hello, world")
                         }
                         else -> error("Unhandled ${request.url.fullPath}")

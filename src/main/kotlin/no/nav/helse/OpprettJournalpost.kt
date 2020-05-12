@@ -17,7 +17,7 @@ class OpprettJournalpost(
         River(rapidsConnection).apply {
             validate {
                 it.requireValue("@event_name", "utbetalt")
-                it.requireKey("fødselsnummer", "aktørid", "@id")
+                it.requireKey("fødselsnummer", "aktørId", "@id")
                 it.require("fom", JsonNode::asLocalDate)
                 it.require("tom", JsonNode::asLocalDate)
             }
@@ -27,7 +27,7 @@ class OpprettJournalpost(
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
         log.info("Oppdaget utbetaling")
         val fnr = packet["fødselsnummer"].asText()
-        val aktørId = packet["aktørid"].asText()
+        val aktørId = packet["aktørId"].asText()
         val fom = packet["fom"].asLocalDate()
         val tom = packet["tom"].asLocalDate()
         val hendelseId = UUID.fromString(packet["@id"].asText())

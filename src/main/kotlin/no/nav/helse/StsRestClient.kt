@@ -2,6 +2,7 @@ package no.nav.helse
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.HttpClient
+import io.ktor.client.features.ServerResponseException
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -26,12 +27,26 @@ class StsRestClient(
         return cachedOidcToken.access_token
     }
 
-    private suspend fun fetchToken(): Token = httpClient.get<HttpStatement>(
-        "$baseUrl/rest/v1/sts/token?grant_type=client_credentials&scope=openid"
-    ) {
-        header("Authorization", serviceUser.basicAuth)
-        accept(ContentType.Application.Json)
-    }.execute { objectMapper.readValue<Token>(it.readText()) }
+    private suspend fun fetchToken(): Token {
+        try {
+            return httpClient.get<HttpStatement>(
+                "$baseUrl/rest/v1/sts/token?grant_type=client_credentials&scope=openid"
+            ) {
+                header("Authorization", serviceUser.basicAuth)
+                accept(ContentType.Application.Json)
+            }
+                .execute {
+                    objectMapper.readValue<Token>(it.readText())
+                }
+        } catch (e: ServerResponseException) {
+            log.error(e.response.toString())
+            log.error("Feil ved henting av token", e)
+            throw RuntimeException("Feil ved henting av token", e)
+        } catch (e: Exception) {
+            log.error("Feil ved henting av token", e)
+            throw RuntimeException("Feil ved henting av token", e)
+        }
+    }
 
     internal data class Token(
         internal val access_token: String,

@@ -39,12 +39,12 @@ class StsRestClient(
                     objectMapper.readValue<Token>(it.readText())
                 }
         } catch (e: ServerResponseException) {
-            log.error(e.response.toString())
+            log.error(e.response.readText())
             log.error("Feil ved henting av token", e)
             throw RuntimeException("Feil ved henting av token", e)
         } catch (e: Exception) {
-            log.error("Feil ved henting av token", e)
-            throw RuntimeException("Feil ved henting av token", e)
+            log.error("Uventet feil ved henting av token", e)
+            throw RuntimeException("Uventet feil ved henting av token", e)
         }
     }
 

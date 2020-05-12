@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val junitJupiterVersion = "5.5.2"
-val ktorVersion = "1.2.6"
+val ktorVersion = "1.3.1"
 
 plugins {
     kotlin("jvm") version "1.3.61"

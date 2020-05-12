@@ -24,7 +24,7 @@ class Vedtak(
         bruker = Bruker(id = fnr),
         dokumenter = listOf(
             Dokument(
-                tittel = "Vedtak på sykepenger ${formatter.format(fom)}-${formatter.format(tom)}",
+                tittel = "Sykepenger utbetalt i ny løsning ${formatter.format(fom)}-${formatter.format(tom)}",
                 dokumentvarianter = listOf(DokumentVariant(fysiskDokument = pdfAsBase64()))
             )
         )

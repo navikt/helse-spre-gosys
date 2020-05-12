@@ -89,7 +89,7 @@ class OpprettJournalpostTest {
             ),
             dokumenter = listOf(
                 Dokument(
-                    tittel = "Vedtak på sykepenger 11.05.2020-30.05.2020",
+                    tittel = "Sykepenger utbetalt i ny løsning 11.05.2020-30.05.2020",
                     dokumentvarianter = listOf(
                         DokumentVariant(
                             filtype = "PDFA",

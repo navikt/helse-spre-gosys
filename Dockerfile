@@ -1,6 +1,6 @@
 FROM navikt/java:12
 
-COPY journalforing/build/libs/*.jar ./
+COPY build/libs/*.jar ./
 
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 \
                -XX:+HeapDumpOnOutOfMemoryError \

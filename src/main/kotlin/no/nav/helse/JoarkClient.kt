@@ -7,21 +7,21 @@ import io.ktor.client.statement.HttpStatement
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import java.util.*
 
 class JoarkClient(
     private val baseUrl: String,
     private val stsRestClient: StsRestClient,
     private val httpClient: HttpClient
 ) {
-    suspend fun opprettJournalpost(vedtak: Vedtak): Boolean {
+    suspend fun opprettJournalpost(hendelseId: UUID, journalpostPayload: JournalpostPayload): Boolean {
         return httpClient.post<HttpStatement>("$baseUrl/rest/journalpostapi/v1/journalpost?forsoekFerdigstill=true") {
-            header("Nav-Consumer-Token", vedtak.hendelseId.toString())
+            header("Nav-Consumer-Token", hendelseId.toString())
             header("Authorization", "Bearer ${stsRestClient.token()}")
             contentType(ContentType.Application.Json)
-            body = vedtak.toJournalpostPayload()
+            body = journalpostPayload
         }
             .execute {
-                log.info("Vedtak journalført på aktør: ${vedtak.aktørId}")
                 it.status == HttpStatusCode.OK
             }
 

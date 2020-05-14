@@ -28,11 +28,13 @@ fun launchApplication(
 ): RapidsConnection {
     val serviceUser = readServiceUserCredentials()
     val stsRestClient = StsRestClient(requireNotNull(environment["STS_URL"]), serviceUser)
-    val joarkClient = JoarkClient(requireNotNull(environment["JOARK_BASE_URL"]), stsRestClient, HttpClient {
+    val httpClient = HttpClient {
         install(JsonFeature) { serializer = JacksonSerializer() }
-    })
+    }
+    val joarkClient = JoarkClient(requireNotNull(environment["JOARK_BASE_URL"]), stsRestClient, httpClient)
+    val pdfClient = PdfClient(httpClient)
 
     return RapidApplication.create(environment).apply {
-        OpprettJournalpost(this, joarkClient)
+        OpprettJournalpost(this, joarkClient, pdfClient)
     }
 }

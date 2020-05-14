@@ -18,7 +18,7 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.util.Base64
+import java.util.*
 
 @KtorExperimentalAPI
 class OpprettJournalpostTest {
@@ -29,11 +29,12 @@ class OpprettJournalpostTest {
     }
     private val mockClient = httpclient()
     private val joark = spyk(JoarkClient("https://url.no", stsMock, mockClient))
+    private val pdfClient = PdfClient(mockClient)
     private var capturedRequest: HttpRequestData? = null
     private var capturedPayload: JournalpostPayload? = null
 
     init {
-        OpprettJournalpost(testRapid, joark)
+        OpprettJournalpost(testRapid, joark, pdfClient)
     }
 
     @BeforeEach
@@ -65,6 +66,9 @@ class OpprettJournalpostTest {
                             capturedRequest = request
                             capturedPayload =  objectMapper.readValue(request.body.toByteArray(), JournalpostPayload::class.java)
                             respond("Hello, world")
+                        }
+                        "/api/v1/genpdf/gosys-pdf/vedtak" -> {
+                            respond("Test".toByteArray())
                         }
                         else -> error("Unhandled ${request.url.fullPath}")
                     }

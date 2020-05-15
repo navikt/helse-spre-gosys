@@ -10,7 +10,7 @@ class PdfClient(
     private val httpClient: HttpClient
 ) {
     suspend fun hentPdf(vedtak: PdfPayload): ByteArray =
-        httpClient.post("http://spre-gosys-pdf:8080/api/v1/genpdf/gosys-pdf/vedtak") {
+        httpClient.post("http://spre-gosys-pdf/api/v1/genpdf/gosys-pdf/vedtak") {
             contentType(Json)
             body = vedtak
         }

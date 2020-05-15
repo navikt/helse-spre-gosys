@@ -29,7 +29,7 @@ fun launchApplication(
     val serviceUser = readServiceUserCredentials()
     val stsRestClient = StsRestClient(requireNotNull(environment["STS_URL"]), serviceUser)
     val httpClient = HttpClient {
-        install(JsonFeature) { serializer = JacksonSerializer() }
+        install(JsonFeature) { serializer = JacksonSerializer(objectMapper) }
     }
     val joarkClient = JoarkClient(requireNotNull(environment["JOARK_BASE_URL"]), stsRestClient, httpClient)
     val pdfClient = PdfClient(httpClient)

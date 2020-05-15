@@ -1,5 +1,7 @@
 package no.nav.helse
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -18,7 +20,8 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.util.*
+import java.time.LocalDate
+import java.util.Base64
 
 @KtorExperimentalAPI
 class OpprettJournalpostTest {
@@ -30,8 +33,8 @@ class OpprettJournalpostTest {
     private val mockClient = httpclient()
     private val joark = spyk(JoarkClient("https://url.no", stsMock, mockClient))
     private val pdfClient = PdfClient(mockClient)
-    private var capturedRequest: HttpRequestData? = null
-    private var capturedPayload: JournalpostPayload? = null
+    private var capturedJoarkRequest: HttpRequestData? = null
+    private var capturedPdfRequest: HttpRequestData? = null
 
     init {
         OpprettJournalpost(testRapid, joark, pdfClient)
@@ -45,29 +48,55 @@ class OpprettJournalpostTest {
     @Test
     fun `journalfører et vedtak`() = runBlocking {
         testRapid.sendTestMessage(vedtakV3())
-        val request = requireNotNull(capturedRequest)
-        val payload = requireNotNull(capturedPayload)
+        val joarkRequest = requireNotNull(capturedJoarkRequest)
+        val joarkPayload =
+            requireNotNull(objectMapper.readValue(joarkRequest.body.toByteArray(), JournalpostPayload::class.java))
 
-        assertEquals("Bearer 6B70C162-8AAB-4B56-944D-7F092423FE4B", request.headers["Authorization"])
-        assertEquals("e8eb9ffa-57b7-4fe0-b44c-471b2b306bb6", request.headers["Nav-Consumer-Token"])
-        assertEquals("application/json", request.body.contentType.toString())
-        assertEquals(expectedJournalpost(), payload)
+        assertEquals("Bearer 6B70C162-8AAB-4B56-944D-7F092423FE4B", joarkRequest.headers["Authorization"])
+        assertEquals("e8eb9ffa-57b7-4fe0-b44c-471b2b306bb6", joarkRequest.headers["Nav-Consumer-Token"])
+        assertEquals("application/json", joarkRequest.body.contentType.toString())
+        assertEquals(expectedJournalpost(), joarkPayload)
+
+        val pdfRequest = requireNotNull(capturedPdfRequest)
+        val pdfPayload =
+            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), PdfPayload::class.java))
+
+        val expectedPdfPayload = PdfPayload(
+            fødselsnummer = "fnr",
+            fagsystemId = "77ATRH3QENHB5K4XUY4LQ7HRTY",
+            fom = LocalDate.of(2020, 5, 11),
+            tom = LocalDate.of(2020, 5, 30),
+            organisasjonsnummer = "orgnummer",
+            behandlingsdato = LocalDate.of(2020, 5, 4),
+            dagerIgjen = 233,
+            totaltTilUtbetaling = 8586,
+            linjer = listOf(
+                Linje(
+                    fom = LocalDate.of(2020, 5, 11),
+                    tom = LocalDate.of(2020, 5, 30),
+                    grad = 100,
+                    sykepengegrunnlag = 1431 * 260
+                )
+            )
+        )
+
+        assertEquals(expectedPdfPayload, pdfPayload)
     }
 
     private fun httpclient(): HttpClient {
         return HttpClient(MockEngine) {
             install(JsonFeature) {
-                serializer = JacksonSerializer()
+                serializer = JacksonSerializer(objectMapper)
             }
             engine {
                 addHandler { request ->
                     when (request.url.fullPath) {
                         "/rest/journalpostapi/v1/journalpost?forsoekFerdigstill=true" -> {
-                            capturedRequest = request
-                            capturedPayload =  objectMapper.readValue(request.body.toByteArray(), JournalpostPayload::class.java)
+                            capturedJoarkRequest = request
                             respond("Hello, world")
                         }
                         "/api/v1/genpdf/gosys-pdf/vedtak" -> {
+                            capturedPdfRequest = request
                             respond("Test".toByteArray())
                         }
                         else -> error("Unhandled ${request.url.fullPath}")

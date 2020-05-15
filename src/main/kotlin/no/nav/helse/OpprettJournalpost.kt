@@ -2,9 +2,14 @@ package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.rapids_rivers.*
+import no.nav.helse.rapids_rivers.JsonMessage
+import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.rapids_rivers.River
+import no.nav.helse.rapids_rivers.asLocalDate
+import no.nav.helse.rapids_rivers.asLocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Base64
+import java.util.UUID
 
 class OpprettJournalpost(
     rapidsConnection: RapidsConnection,
@@ -16,7 +21,14 @@ class OpprettJournalpost(
         River(rapidsConnection).apply {
             validate {
                 it.requireValue("@event_name", "utbetalt")
-                it.requireKey("fødselsnummer", "aktørId", "@id", "organisasjonsnummer", "gjenståendeSykedager")
+                it.requireKey(
+                    "fødselsnummer",
+                    "aktørId",
+                    "@id",
+                    "organisasjonsnummer",
+                    "gjenståendeSykedager",
+                    "utbetalt"
+                )
                 it.require("fom", JsonNode::asLocalDate)
                 it.require("tom", JsonNode::asLocalDate)
                 it.require("@opprettet", JsonNode::asLocalDateTime)
@@ -52,22 +64,29 @@ class OpprettJournalpost(
     }
 }
 
-private fun JsonMessage.toPayload() = Payload(
-    navn = "",
-    fødselsnummer = this["fødselsnummer"].asText(),
-    fagsystemId = "",
-    fom = this["fom"].asLocalDate(),
-    tom = this["tom"].asLocalDate(),
-    grad = /* hente fra linjer */ 42,
-    behandlingsdato = this["@opprettet"].asLocalDateTime().toLocalDate(),
-    saksbehandlernavn = "", // Hente dette fra noe sted?
-    arbeidsgiver = this["organisasjonsnummer"].asText(),
-    sykepengegrunnlag =  /* hente fra linjer (beløp-feltet?) */ 42,
-    avvik = /* hente fra linjer */ 42,
-    opptjeningsdager = /* mangler i event */ null,
-    dagerIgjen = this["gjenståendeSykedager"].asInt(),
-    utbetaling = /* hente fra linjer */ 42
-)
+private fun JsonMessage.toPayload(): PdfPayload {
+    val arbeidsgiverUtbetaling = this["utbetalt"].find { it["fagområde"].asText() == "SPREF" }!!
+    val totaltTilUtbetaling = arbeidsgiverUtbetaling["totalbeløp"].asInt()
+    val linjer = arbeidsgiverUtbetaling["utbetalingslinjer"].map {
+        Linje(
+            fom = it["fom"].asLocalDate(),
+            tom = it["tom"].asLocalDate(),
+            grad = it["grad"].asInt(),
+            sykepengegrunnlag = it["beløp"].asInt() * 260
+        )
+    }
+    return PdfPayload(
+        fødselsnummer = this["fødselsnummer"].asText(),
+        fagsystemId = arbeidsgiverUtbetaling["fagsystemId"].asText(),
+        fom = this["fom"].asLocalDate(),
+        tom = this["tom"].asLocalDate(),
+        behandlingsdato = this["@opprettet"].asLocalDateTime().toLocalDate(),
+        organisasjonsnummer = this["organisasjonsnummer"].asText(),
+        dagerIgjen = this["gjenståendeSykedager"].asInt(),
+        totaltTilUtbetaling = totaltTilUtbetaling,
+        linjer = linjer
+    )
+}
 
 private fun ByteArray.toPdfString() = Base64.getEncoder().encodeToString(this)
 

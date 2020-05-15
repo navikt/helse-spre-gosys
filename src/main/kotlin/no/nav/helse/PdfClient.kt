@@ -9,26 +9,28 @@ import java.time.LocalDate
 class PdfClient(
     private val httpClient: HttpClient
 ) {
-    suspend fun hentPdf(vedtak: Payload): ByteArray =
+    suspend fun hentPdf(vedtak: PdfPayload): ByteArray =
         httpClient.post("http://spre-gosys-pdf/api/v1/genpdf/gosys-pdf/vedtak") {
             contentType(Json)
             body = vedtak
         }
 }
 
-data class Payload(
-    val navn: String,
+data class PdfPayload(
     val fødselsnummer: String,
     val fagsystemId: String,
     val fom: LocalDate,
     val tom: LocalDate,
-    val grad: Int,
+    val linjer: List<Linje>,
+    val organisasjonsnummer: String,
     val behandlingsdato: LocalDate,
-    val saksbehandlernavn: String,
-    val arbeidsgiver: String,
-    val sykepengegrunnlag: Int,
-    val avvik: Int,
-    val opptjeningsdager: Int?,
     val dagerIgjen: Int,
-    val utbetaling: Int
+    val totaltTilUtbetaling: Int
+)
+
+data class Linje(
+    val fom: LocalDate,
+    val tom: LocalDate,
+    val grad: Int,
+    val sykepengegrunnlag: Int
 )

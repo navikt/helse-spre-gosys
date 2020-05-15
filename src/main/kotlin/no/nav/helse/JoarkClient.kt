@@ -1,6 +1,7 @@
 package no.nav.helse
 
 import io.ktor.client.HttpClient
+import io.ktor.client.call.receive
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpStatement
@@ -22,6 +23,9 @@ class JoarkClient(
             body = journalpostPayload
         }
             .execute {
+                if (it.status != HttpStatusCode.OK) {
+                    log.warn("Feil fra Joark: ${it.receive<String>()}")
+                }
                 it.status == HttpStatusCode.OK
             }
 

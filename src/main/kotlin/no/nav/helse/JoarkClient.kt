@@ -6,7 +6,6 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpStatement
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import java.util.*
 
@@ -25,8 +24,8 @@ class JoarkClient(
             .execute {
                 if (it.status.value !in 200..300) {
                     log.warn("Feil fra Joark: ${it.receive<String>()}, statusCode: $it.status")
-                }
-                it.status == HttpStatusCode.OK
+                    false
+                } else true
             }
 
     }

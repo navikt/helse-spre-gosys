@@ -68,12 +68,13 @@ class OpprettJournalpostTest {
             behandlingsdato = LocalDate.of(2020, 5, 4),
             dagerIgjen = 233,
             totaltTilUtbetaling = 8586,
+            dagsats = 1431,
             linjer = listOf(
                 Linje(
                     fom = LocalDate.of(2020, 5, 11),
                     tom = LocalDate.of(2020, 5, 30),
                     grad = 100,
-                    sykepengegrunnlag = 1431 * 260
+                    beløp = 1431
                 )
             )
         )

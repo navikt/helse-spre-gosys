@@ -2,14 +2,9 @@ package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.rapids_rivers.River
-import no.nav.helse.rapids_rivers.asLocalDate
-import no.nav.helse.rapids_rivers.asLocalDateTime
+import no.nav.helse.rapids_rivers.*
 import java.time.format.DateTimeFormatter
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 
 class OpprettJournalpost(
     rapidsConnection: RapidsConnection,
@@ -58,7 +53,7 @@ class OpprettJournalpost(
             )
             joarkClient.opprettJournalpost(hendelseId, journalpostPayload).let { status ->
                 if (status) log.info("Vedtak journalført på aktør: $aktørId")
-                else log.warn("Feil oppstod under journalføring av vedtak")
+                else log.warn("Feil oppstod under journalføring av vedtak. Status fra Joark: ")
             }
         }
     }
@@ -67,12 +62,13 @@ class OpprettJournalpost(
 private fun JsonMessage.toPayload(): PdfPayload {
     val arbeidsgiverUtbetaling = this["utbetalt"].find { it["fagområde"].asText() == "SPREF" }!!
     val totaltTilUtbetaling = arbeidsgiverUtbetaling["totalbeløp"].asInt()
+    val dagsats = arbeidsgiverUtbetaling["utbetalingslinjer"].first()["dagsats"].asInt()
     val linjer = arbeidsgiverUtbetaling["utbetalingslinjer"].map {
         Linje(
             fom = it["fom"].asLocalDate(),
             tom = it["tom"].asLocalDate(),
             grad = it["grad"].asInt(),
-            sykepengegrunnlag = it["beløp"].asInt() * 260
+            beløp = it["beløp"].asInt()
         )
     }
     return PdfPayload(
@@ -84,6 +80,7 @@ private fun JsonMessage.toPayload(): PdfPayload {
         organisasjonsnummer = this["organisasjonsnummer"].asText(),
         dagerIgjen = this["gjenståendeSykedager"].asInt(),
         totaltTilUtbetaling = totaltTilUtbetaling,
+        dagsats = dagsats,
         linjer = linjer
     )
 }

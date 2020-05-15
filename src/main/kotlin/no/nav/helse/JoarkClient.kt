@@ -23,8 +23,8 @@ class JoarkClient(
             body = journalpostPayload
         }
             .execute {
-                if (it.status != HttpStatusCode.OK) {
-                    log.warn("Feil fra Joark: ${it.receive<String>()}")
+                if (it.status.value !in 200..300) {
+                    log.warn("Feil fra Joark: ${it.receive<String>()}, statusCode: $it.status")
                 }
                 it.status == HttpStatusCode.OK
             }

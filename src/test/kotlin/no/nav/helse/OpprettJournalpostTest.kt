@@ -1,7 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -21,7 +19,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.Base64
+import java.util.*
 
 @KtorExperimentalAPI
 class OpprettJournalpostTest {
@@ -95,7 +93,7 @@ class OpprettJournalpostTest {
                             capturedJoarkRequest = request
                             respond("Hello, world")
                         }
-                        "/api/v1/genpdf/gosys-pdf/vedtak" -> {
+                        "/api/v1/genpdf/spre-gosys/vedtak" -> {
                             capturedPdfRequest = request
                             respond("Test".toByteArray())
                         }

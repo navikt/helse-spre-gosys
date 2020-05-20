@@ -73,7 +73,7 @@ class OpprettJournalpost(
 private fun JsonMessage.toPayload(): PdfPayload {
     val arbeidsgiverUtbetaling = this["utbetalt"].find { it["fagområde"].asText() == "SPREF" }!!
     val totaltTilUtbetaling = arbeidsgiverUtbetaling["totalbeløp"].asInt()
-    val dagsats = arbeidsgiverUtbetaling["utbetalingslinjer"].first()["dagsats"].asInt()
+    val dagsats = arbeidsgiverUtbetaling["utbetalingslinjer"][0]?.get("dagsats")?.asInt()
     val linjer = arbeidsgiverUtbetaling["utbetalingslinjer"].map {
         Linje(
             fom = it["fom"].asLocalDate(),

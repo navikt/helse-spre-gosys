@@ -26,7 +26,7 @@ data class PdfPayload(
     val behandlingsdato: LocalDate,
     val dagerIgjen: Int,
     val totaltTilUtbetaling: Int,
-    val dagsats: Int
+    val dagsats: Int?
 )
 
 data class Linje(

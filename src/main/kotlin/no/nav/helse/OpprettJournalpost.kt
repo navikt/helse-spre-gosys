@@ -2,15 +2,24 @@ package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.rapids_rivers.*
+import net.logstash.logback.argument.StructuredArguments.keyValue
+import no.nav.helse.rapids_rivers.JsonMessage
+import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.rapids_rivers.River
+import no.nav.helse.rapids_rivers.asLocalDate
+import no.nav.helse.rapids_rivers.asLocalDateTime
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Base64
+import java.util.UUID
 
 class OpprettJournalpost(
     rapidsConnection: RapidsConnection,
     private val joarkClient: JoarkClient,
     private val pdfClient: PdfClient
 ) : River.PacketListener {
+    private val sikkerLogg: Logger = LoggerFactory.getLogger("tjenestekall")
 
     init {
         River(rapidsConnection).apply {
@@ -32,12 +41,14 @@ class OpprettJournalpost(
     }
 
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
-        log.info("Oppdaget utbetaling")
+        val hendelseId = UUID.fromString(packet["@id"].asText())
+        log.info("Oppdaget utbetalingevent {}", keyValue("id", hendelseId))
+        sikkerLogg.info(packet.toJson())
+
         val fnr = packet["fødselsnummer"].asText()
         val aktørId = packet["aktørId"].asText()
         val fom = packet["fom"].asLocalDate()
         val tom = packet["tom"].asLocalDate()
-        val hendelseId = UUID.fromString(packet["@id"].asText())
 
         runBlocking {
             val pdf = pdfClient.hentPdf(packet.toPayload()).toPdfString()

@@ -47,8 +47,13 @@ class OpprettJournalpost(
 
         val fnr = packet["fødselsnummer"].asText()
         val aktørId = packet["aktørId"].asText()
-        val fom = packet["fom"].asLocalDate()
-        val tom = packet["tom"].asLocalDate()
+        val utbetalingsperioder = packet["utbetalt"]
+            .find { it["fagområde"].asText() == "SPREF" }
+            ?.path("utbetalingslinjer")
+            ?.map { "${formatter.format(it["fom"].asLocalDate())} - ${formatter.format(it["tom"].asLocalDate())}" }
+            ?.takeIf { it.isNotEmpty() }
+            ?.joinToString(prefix = "utbetalte perioder: ")
+            ?: "ingen utbetalingsperioder"
 
         runBlocking {
             val pdf = pdfClient.hentPdf(packet.toPayload()).toPdfString()
@@ -57,7 +62,7 @@ class OpprettJournalpost(
                 bruker = Bruker(id = fnr),
                 dokumenter = listOf(
                     Dokument(
-                        tittel = "Sykepenger utbetalt i ny løsning ${formatter.format(fom)}-${formatter.format(tom)}",
+                        tittel = "Sykepenger behandlet i ny løsning, $utbetalingsperioder",
                         dokumentvarianter = listOf(DokumentVariant(fysiskDokument = pdf))
                     )
                 )

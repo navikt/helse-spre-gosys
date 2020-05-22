@@ -111,6 +111,48 @@ class OpprettJournalpostTest {
         assertEquals(expectedPdfPayload, pdfPayload)
     }
 
+    @Test
+    fun `journalfører et vedtak med flere utbetalinger`() = runBlocking {
+        testRapid.sendTestMessage(vedtakFlereUtbetalinger())
+        val joarkRequest = requireNotNull(capturedJoarkRequest)
+        val joarkPayload =
+            requireNotNull(objectMapper.readValue(joarkRequest.body.toByteArray(), JournalpostPayload::class.java))
+
+        assertEquals(expectedJournalpostMedFlereUtbetalinger(), joarkPayload)
+
+        val pdfRequest = requireNotNull(capturedPdfRequest)
+        val pdfPayload =
+            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), PdfPayload::class.java))
+
+        val expectedPdfPayload = PdfPayload(
+            fødselsnummer = "12345678910",
+            fagsystemId = "V7E6ZHOCKJDNZNQMCAU23MQ47A",
+            fom = LocalDate.of(2020, 5, 16),
+            tom = LocalDate.of(2020, 5, 17),
+            organisasjonsnummer = "123456789",
+            behandlingsdato = LocalDate.of(2020, 5, 20),
+            dagerIgjen = 48,
+            totaltTilUtbetaling = 15000,
+            dagsats = 1431,
+            linjer = listOf(
+                Linje(
+                    fom = LocalDate.of(2020, 5, 11),
+                    tom = LocalDate.of(2020, 5, 20),
+                    grad = 100,
+                    beløp = 1431
+                ),
+                Linje(
+                    fom = LocalDate.of(2020, 5, 21),
+                    tom = LocalDate.of(2020, 5, 30),
+                    grad = 50,
+                    beløp = 1431
+                )
+            )
+        )
+
+        assertEquals(expectedPdfPayload, pdfPayload)
+    }
+
     private fun httpclient(): HttpClient {
         return HttpClient(MockEngine) {
             install(JsonFeature) {
@@ -150,7 +192,7 @@ class OpprettJournalpostTest {
             ),
             dokumenter = listOf(
                 Dokument(
-                    tittel = "Sykepenger utbetalt i ny løsning 11.05.2020-30.05.2020",
+                    tittel = "Sykepenger behandlet i ny løsning, utbetalte perioder: 11.05.2020 - 30.05.2020",
                     dokumentvarianter = listOf(
                         DokumentVariant(
                             filtype = "PDFA",
@@ -179,7 +221,36 @@ class OpprettJournalpostTest {
             ),
             dokumenter = listOf(
                 Dokument(
-                    tittel = "Sykepenger utbetalt i ny løsning 16.05.2020-17.05.2020",
+                    tittel = "Sykepenger behandlet i ny løsning, ingen utbetalingsperioder",
+                    dokumentvarianter = listOf(
+                        DokumentVariant(
+                            filtype = "PDFA",
+                            fysiskDokument = Base64.getEncoder().encodeToString("Test".toByteArray()),
+                            variantformat = "ARKIV"
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    private fun expectedJournalpostMedFlereUtbetalinger(): JournalpostPayload {
+        return JournalpostPayload(
+            tittel = "Vedtak om sykepenger",
+            journalpostType = "NOTAT",
+            tema = "SYK",
+            behandlingstema = "ab0061",
+            journalfoerendeEnhet = "9999",
+            bruker = Bruker(
+                id = "12345678910",
+                idType = "FNR"
+            ),
+            sak = Sak(
+                sakstype = "GENERELL_SAK"
+            ),
+            dokumenter = listOf(
+                Dokument(
+                    tittel = "Sykepenger behandlet i ny løsning, utbetalte perioder: 11.05.2020 - 20.05.2020, 21.05.2020 - 30.05.2020",
                     dokumentvarianter = listOf(
                         DokumentVariant(
                             filtype = "PDFA",
@@ -263,6 +334,78 @@ class OpprettJournalpostTest {
               "fagsystemId": "V7E6ZHOCKJDNZNQMCAU23MQ47A",
               "totalbeløp": 0,
               "utbetalingslinjer": []
+            },
+            {
+              "mottaker": "12345678910",
+              "fagområde": "SP",
+              "fagsystemId": "HHJX3CRNDVCXZPHGJ7HNMGHT3M",
+              "totalbeløp": 0,
+              "utbetalingslinjer": []
+            }
+          ],
+          "fom": "2020-05-16",
+          "tom": "2020-05-17",
+          "forbrukteSykedager": 200,
+          "gjenståendeSykedager": 48,
+          "opprettet": "2020-05-19T23:22:53.123929",
+          "system_read_count": 1,
+          "system_participating_services": [
+            {
+              "service": "spleis",
+              "instance": "spleis-5859fd6594-nlcrp",
+              "time": "2020-05-20T06:36:02.865565"
+            },
+            {
+              "service": "spre-gosys",
+              "instance": "spre-gosys-6c67d7998f-5mxlr",
+              "time": "2020-05-20T09:13:29.880501"
+            }
+          ],
+          "@event_name": "utbetalt",
+          "@id": "efad5041-23de-49ff-85bb-7f9e8d59c77a",
+          "@opprettet": "2020-05-20T06:36:02.865575",
+          "@forårsaket_av": {
+            "event_name": "behov",
+            "id": "0ae18ef0-84a8-417b-bcb5-d1953c1b59cb",
+            "opprettet": "2020-05-19T23:22:53.134056"
+          }
+        }
+    """
+
+    @Language("JSON")
+    private fun vedtakFlereUtbetalinger() = """
+        {
+          "aktørId": "1000012345678",
+          "fødselsnummer": "12345678910",
+          "organisasjonsnummer": "123456789",
+          "hendelser": [
+            "56a20c00-51c5-4e0b-9136-e0ba0b329041",
+            "8af1e0a9-5178-4f62-b2a0-7cbce6acfc07"
+          ],
+          "utbetalt": [
+            {
+              "mottaker": "123456789",
+              "fagområde": "SPREF",
+              "fagsystemId": "V7E6ZHOCKJDNZNQMCAU23MQ47A",
+              "totalbeløp": 15000,
+              "utbetalingslinjer": [
+                {
+                    "fom": "2020-05-11",
+                    "tom": "2020-05-20",
+                    "dagsats": 1431,
+                    "beløp": 1431,
+                    "grad": 100.0,
+                    "sykedager": 15
+                },
+                {
+                    "fom": "2020-05-21",
+                    "tom": "2020-05-30",
+                    "dagsats": 1431,
+                    "beløp": 1431,
+                    "grad": 50.0,
+                    "sykedager": 15
+                }
+              ]
             },
             {
               "mottaker": "12345678910",

@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val junitJupiterVersion = "5.5.2"
+val junitJupiterVersion = "5.6.2"
 val ktorVersion = "1.3.2"
 
 plugins {
@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:1.74ae9cb")
+    implementation("com.github.navikt:rapids-and-rivers:fa839faa1c")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
 
@@ -24,7 +24,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
 
     testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")
-    testImplementation("io.mockk:mockk:1.9.3")
+    testImplementation("io.mockk:mockk:1.10.0")
 }
 
 java {
@@ -32,36 +32,38 @@ java {
     targetCompatibility = JavaVersion.VERSION_12
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "12"
-}
+tasks {
+    withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = "12"
+    }
 
-tasks.named<KotlinCompile>("compileTestKotlin") {
-    kotlinOptions.jvmTarget = "12"
-}
+    named<KotlinCompile>("compileTestKotlin") {
+        kotlinOptions.jvmTarget = "12"
+    }
 
-tasks.named<Jar>("jar") {
-    archiveBaseName.set("app")
+    withType<Jar> {
+        archiveBaseName.set("app")
 
-    manifest {
-        attributes["Main-Class"] = "no.nav.helse.AppKt"
-        attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
-            it.name
+        manifest {
+            attributes["Main-Class"] = "no.nav.helse.AppKt"
+            attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
+                it.name
+            }
+        }
+
+        doLast {
+            configurations.runtimeClasspath.get().forEach {
+                val file = File("$buildDir/libs/${it.name}")
+                if (!file.exists())
+                    it.copyTo(file)
+            }
         }
     }
 
-    doLast {
-        configurations.runtimeClasspath.get().forEach {
-            val file = File("$buildDir/libs/${it.name}")
-            if (!file.exists())
-                it.copyTo(file)
+    withType<Test> {
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
         }
-    }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
     }
 }

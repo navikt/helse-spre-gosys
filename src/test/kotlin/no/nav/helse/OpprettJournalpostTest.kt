@@ -69,12 +69,14 @@ class OpprettJournalpostTest {
             dagerIgjen = 233,
             totaltTilUtbetaling = 8586,
             dagsats = 1431,
+            sykepengegrunnlag = 12345.0,
             linjer = listOf(
                 Linje(
                     fom = LocalDate.of(2020, 5, 11),
                     tom = LocalDate.of(2020, 5, 30),
                     grad = 100,
-                    beløp = 1431
+                    beløp = 1431,
+                    mottaker = "arbeidsgiver"
                 )
             )
         )
@@ -105,6 +107,7 @@ class OpprettJournalpostTest {
             dagerIgjen = 48,
             totaltTilUtbetaling = 0,
             dagsats = null,
+            sykepengegrunnlag = 1337.69,
             linjer = listOf()
         )
 
@@ -134,18 +137,21 @@ class OpprettJournalpostTest {
             dagerIgjen = 48,
             totaltTilUtbetaling = 15000,
             dagsats = 1431,
+            sykepengegrunnlag = 420.69,
             linjer = listOf(
                 Linje(
                     fom = LocalDate.of(2020, 5, 11),
                     tom = LocalDate.of(2020, 5, 20),
                     grad = 100,
-                    beløp = 1431
+                    beløp = 1431,
+                    mottaker = "arbeidsgiver"
                 ),
                 Linje(
                     fom = LocalDate.of(2020, 5, 21),
                     tom = LocalDate.of(2020, 5, 30),
                     grad = 50,
-                    beløp = 1431
+                    beløp = 1431,
+                    mottaker = "arbeidsgiver"
                 )
             )
         )
@@ -304,6 +310,7 @@ class OpprettJournalpostTest {
             "tom": "2020-05-30",
             "forbrukteSykedager": 15,
             "gjenståendeSykedager": 233,
+            "sykepengegrunnlag": 12345.0,
             "opprettet": "2020-05-04T11:26:30.23846",
             "system_read_count": 0,
             "@event_name": "utbetalt",
@@ -348,6 +355,7 @@ class OpprettJournalpostTest {
           "forbrukteSykedager": 200,
           "gjenståendeSykedager": 48,
           "opprettet": "2020-05-19T23:22:53.123929",
+          "sykepengegrunnlag": 1337.69,
           "system_read_count": 1,
           "system_participating_services": [
             {
@@ -419,6 +427,7 @@ class OpprettJournalpostTest {
           "tom": "2020-05-17",
           "forbrukteSykedager": 200,
           "gjenståendeSykedager": 48,
+          "sykepengegrunnlag": 420.69,
           "opprettet": "2020-05-19T23:22:53.123929",
           "system_read_count": 1,
           "system_participating_services": [

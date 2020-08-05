@@ -31,7 +31,8 @@ class OpprettJournalpost(
                     "@id",
                     "organisasjonsnummer",
                     "gjenståendeSykedager",
-                    "utbetalt"
+                    "utbetalt",
+                    "sykepengegrunnlag"
                 )
                 it.require("fom", JsonNode::asLocalDate)
                 it.require("tom", JsonNode::asLocalDate)
@@ -79,12 +80,13 @@ private fun JsonMessage.toPayload(): PdfPayload {
     val arbeidsgiverUtbetaling = this["utbetalt"].find { it["fagområde"].asText() == "SPREF" }!!
     val totaltTilUtbetaling = arbeidsgiverUtbetaling["totalbeløp"].asInt()
     val dagsats = arbeidsgiverUtbetaling["utbetalingslinjer"][0]?.get("dagsats")?.asInt()
-    val linjer = arbeidsgiverUtbetaling["utbetalingslinjer"].map {
+    val arbeidsgiverutbetalingslinjer = arbeidsgiverUtbetaling["utbetalingslinjer"].map {
         Linje(
             fom = it["fom"].asLocalDate(),
             tom = it["tom"].asLocalDate(),
             grad = it["grad"].asInt(),
-            beløp = it["beløp"].asInt()
+            beløp = it["beløp"].asInt(),
+            mottaker = "arbeidsgiver"
         )
     }
     return PdfPayload(
@@ -97,7 +99,8 @@ private fun JsonMessage.toPayload(): PdfPayload {
         dagerIgjen = this["gjenståendeSykedager"].asInt(),
         totaltTilUtbetaling = totaltTilUtbetaling,
         dagsats = dagsats,
-        linjer = linjer
+        linjer = arbeidsgiverutbetalingslinjer,
+        sykepengegrunnlag = this["sykepengegrunnlag"].asDouble()
     )
 }
 

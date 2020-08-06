@@ -198,7 +198,7 @@ class OpprettJournalpostTest {
             ),
             dokumenter = listOf(
                 Dokument(
-                    tittel = "Sykepenger behandlet i ny løsning, utbetalte perioder: 11.05.2020 - 30.05.2020",
+                    tittel = "Sykepenger behandlet i ny løsning, 11.05.2020 - 30.05.2020",
                     dokumentvarianter = listOf(
                         DokumentVariant(
                             filtype = "PDFA",
@@ -227,7 +227,7 @@ class OpprettJournalpostTest {
             ),
             dokumenter = listOf(
                 Dokument(
-                    tittel = "Sykepenger behandlet i ny løsning, ingen utbetalingsperioder",
+                    tittel = "Sykepenger behandlet i ny løsning, 16.05.2020 - 17.05.2020",
                     dokumentvarianter = listOf(
                         DokumentVariant(
                             filtype = "PDFA",
@@ -256,7 +256,7 @@ class OpprettJournalpostTest {
             ),
             dokumenter = listOf(
                 Dokument(
-                    tittel = "Sykepenger behandlet i ny løsning, utbetalte perioder: 11.05.2020 - 20.05.2020, 21.05.2020 - 30.05.2020",
+                    tittel = "Sykepenger behandlet i ny løsning, 16.05.2020 - 17.05.2020",
                     dokumentvarianter = listOf(
                         DokumentVariant(
                             filtype = "PDFA",

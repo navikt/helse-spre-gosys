@@ -48,13 +48,7 @@ class OpprettJournalpost(
 
         val fnr = packet["fødselsnummer"].asText()
         val aktørId = packet["aktørId"].asText()
-        val utbetalingsperioder = packet["utbetalt"]
-            .find { it["fagområde"].asText() == "SPREF" }
-            ?.path("utbetalingslinjer")
-            ?.map { "${formatter.format(it["fom"].asLocalDate())} - ${formatter.format(it["tom"].asLocalDate())}" }
-            ?.takeIf { it.isNotEmpty() }
-            ?.joinToString(prefix = "utbetalte perioder: ")
-            ?: "ingen utbetalingsperioder"
+        val utbetalingsperioder = "${formatter.format(packet["fom"].asLocalDate())} - ${formatter.format(packet["tom"].asLocalDate())}"
 
         runBlocking {
             val pdf = pdfClient.hentPdf(packet.toPayload()).toPdfString()

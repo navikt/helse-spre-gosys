@@ -91,11 +91,11 @@ private fun JsonMessage.toPayload(): PdfPayload {
         .map {
             IkkeUtbetalteDager(
                 fom = it.fom, tom = it.tom, grunn = when (it.type) {
-                    "SykepengedagerOppbrukt" -> "Sykepengedager oppbrukt"
-                    "MinimumInntekt" -> "Minimum inntekt"
-                    "EgenmeldingUtenforArbeidsgiverperiode" -> "Egenmelding utenfor arbeidsgiverperiode"
-                    "MinimumSykdomsgrad" -> "Minimum sykdomsgrad"
-                    "Fridag" -> "Fridag"
+                    "SykepengedagerOppbrukt" -> "Dager etter maksdato"
+                    "MinimumInntekt" -> "Inntektsgrunnlag under 1/2 G"
+                    "EgenmeldingUtenforArbeidsgiverperiode" -> "Egenmelding etter arbeidsgiverperioden"
+                    "MinimumSykdomsgrad" -> "Sykdomsgrad under 20%"
+                    "Fridag" -> "Ferie/Permisjon"
                     else -> {
                         log.error("Ukjent dagtype $it")
                         "Ukjent dagtype: \"${it.type}\""

@@ -26,6 +26,7 @@ data class PdfPayload(
     val behandlingsdato: LocalDate,
     val dagerIgjen: Int,
     val totaltTilUtbetaling: Int,
+    val ikkeUtbetalteDager: List<IkkeUtbetalteDager>,
     val dagsats: Int?,
     val sykepengegrunnlag: Double
 )
@@ -36,4 +37,10 @@ data class Linje(
     val grad: Int,
     val beløp: Int,
     val mottaker: String
+)
+
+data class IkkeUtbetalteDager(
+    val fom: LocalDate,
+    val tom: LocalDate,
+    val grunn: String
 )

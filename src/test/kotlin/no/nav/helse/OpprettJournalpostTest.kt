@@ -193,7 +193,7 @@ class OpprettJournalpostTest {
                 IkkeUtbetalteDager(
                     fom = LocalDate.of(2020, 5, 11),
                     tom = LocalDate.of(2020, 5, 15),
-                    grunn = "Minimum sykdomsgrad"
+                    grunn = "Sykdomsgrad under 20%"
                 )
             ),
             dagsats = 1431,

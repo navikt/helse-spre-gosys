@@ -28,6 +28,7 @@ data class PdfPayload(
     val totaltTilUtbetaling: Int,
     val ikkeUtbetalteDager: List<IkkeUtbetalteDager>,
     val dagsats: Int?,
+    val maksdato: LocalDate?,
     val sykepengegrunnlag: Double
 )
 

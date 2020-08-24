@@ -73,6 +73,7 @@ class OpprettJournalpostTest {
             ikkeUtbetalteDager = listOf(),
             dagsats = 1431,
             sykepengegrunnlag = 12345.0,
+            maksdato = null,
             linjer = listOf(
                 Linje(
                     fom = LocalDate.of(2020, 5, 11),
@@ -112,6 +113,7 @@ class OpprettJournalpostTest {
             ikkeUtbetalteDager = listOf(),
             dagsats = null,
             sykepengegrunnlag = 1337.69,
+            maksdato = null,
             linjer = listOf()
         )
 
@@ -143,6 +145,7 @@ class OpprettJournalpostTest {
             ikkeUtbetalteDager = listOf(),
             dagsats = 1431,
             sykepengegrunnlag = 420.69,
+            maksdato = LocalDate.of(2020, 7, 17),
             linjer = listOf(
                 Linje(
                     fom = LocalDate.of(2020, 5, 11),
@@ -198,6 +201,7 @@ class OpprettJournalpostTest {
             ),
             dagsats = 1431,
             sykepengegrunnlag = 12345.0,
+            maksdato = null,
             linjer = listOf(
                 Linje(
                     fom = LocalDate.of(2020, 5, 16),
@@ -437,6 +441,7 @@ class OpprettJournalpostTest {
           "tom": "2020-05-17",
           "forbrukteSykedager": 200,
           "gjenståendeSykedager": 48,
+          "maksdato": null,
           "opprettet": "2020-05-19T23:22:53.123929",
           "sykepengegrunnlag": 1337.69,
           "system_read_count": 1,
@@ -511,6 +516,7 @@ class OpprettJournalpostTest {
           "tom": "2020-05-17",
           "forbrukteSykedager": 200,
           "gjenståendeSykedager": 48,
+          "maksdato": "2020-07-17",
           "sykepengegrunnlag": 420.69,
           "opprettet": "2020-05-19T23:22:53.123929",
           "system_read_count": 1,

@@ -8,6 +8,7 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asLocalDateTime
+import no.nav.helse.rapids_rivers.asOptionalLocalDate
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -36,6 +37,7 @@ class OpprettJournalpost(
                     "ikkeUtbetalteDager",
                     "sykepengegrunnlag"
                 )
+                it.interestedIn("maksdato", JsonNode::asLocalDate)
                 it.require("fom", JsonNode::asLocalDate)
                 it.require("tom", JsonNode::asLocalDate)
                 it.require("@opprettet", JsonNode::asLocalDateTime)
@@ -53,7 +55,7 @@ class OpprettJournalpost(
         val utbetalingsperioder = "${formatter.format(packet["fom"].asLocalDate())} - ${formatter.format(packet["tom"].asLocalDate())}"
 
         runBlocking {
-            val pdf = pdfClient.hentPdf(packet.toPayload()).toPdfString()
+            val pdf = pdfClient.hentPdf(packet.toPdfPayload()).toPdfString()
             val journalpostPayload = JournalpostPayload(
                 tittel = "Vedtak om sykepenger",
                 bruker = Bruker(id = fnr),
@@ -72,9 +74,8 @@ class OpprettJournalpost(
     }
 }
 
-private fun JsonMessage.toPayload(): PdfPayload {
+private fun JsonMessage.toPdfPayload(): PdfPayload {
     val arbeidsgiverUtbetaling = this["utbetalt"].find { it["fagområde"].asText() == "SPREF" }!!
-    val totaltTilUtbetaling = arbeidsgiverUtbetaling["totalbeløp"].asInt()
     val dagsats = arbeidsgiverUtbetaling["utbetalingslinjer"][0]?.get("dagsats")?.asInt()
     val arbeidsgiverutbetalingslinjer = arbeidsgiverUtbetaling["utbetalingslinjer"].map {
         Linje(
@@ -112,9 +113,10 @@ private fun JsonMessage.toPayload(): PdfPayload {
         behandlingsdato = this["@opprettet"].asLocalDateTime().toLocalDate(),
         organisasjonsnummer = this["organisasjonsnummer"].asText(),
         dagerIgjen = this["gjenståendeSykedager"].asInt(),
-        totaltTilUtbetaling = totaltTilUtbetaling,
+        totaltTilUtbetaling = arbeidsgiverUtbetaling["totalbeløp"].asInt(),
         ikkeUtbetalteDager = ikkeUtbetalteDager,
         dagsats = dagsats,
+        maksdato = this["maksdato"].asOptionalLocalDate(),
         linjer = arbeidsgiverutbetalingslinjer,
         sykepengegrunnlag = this["sykepengegrunnlag"].asDouble()
     )

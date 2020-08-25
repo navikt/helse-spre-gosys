@@ -52,7 +52,8 @@ class OpprettJournalpost(
 
         val fnr = packet["fødselsnummer"].asText()
         val aktørId = packet["aktørId"].asText()
-        val utbetalingsperioder = "${formatter.format(packet["fom"].asLocalDate())} - ${formatter.format(packet["tom"].asLocalDate())}"
+        val utbetalingsperioder =
+            "${formatter.format(packet["fom"].asLocalDate())} - ${formatter.format(packet["tom"].asLocalDate())}"
 
         runBlocking {
             val pdf = pdfClient.hentPdf(packet.toPdfPayload()).toPdfString()
@@ -97,6 +98,7 @@ private fun JsonMessage.toPdfPayload(): PdfPayload {
                     "EgenmeldingUtenforArbeidsgiverperiode" -> "Egenmelding etter arbeidsgiverperioden"
                     "MinimumSykdomsgrad" -> "Sykdomsgrad under 20%"
                     "Fridag" -> "Ferie/Permisjon"
+                    "Arbeidsdag" -> "Arbeidsdag"
                     else -> {
                         log.error("Ukjent dagtype $it")
                         "Ukjent dagtype: \"${it.type}\""
@@ -131,12 +133,16 @@ internal data class DagAcc(
 internal fun Iterable<JsonNode>.settSammenIkkeUtbetalteDager(): List<DagAcc> = this
     .map { DagAcc(it["dato"].asLocalDate(), it["dato"].asLocalDate(), it["type"].asText()) }
     .fold(listOf<DagAcc>()) { acc, value ->
-        if (acc.isNotEmpty() && acc.last().type == value.type && acc.last().tom.plusDays(1) == value.tom) {
+        if (acc.isNotEmpty()
+            && (acc.last().type == value.type || (acc.last().type == "Arbeidsdag") && value.type == "Fridag")
+            && acc.last().tom.plusDays(1) == value.tom
+        ) {
             acc.last().tom = value.tom
             return@fold acc
         }
         acc + value
     }
+
 
 private fun ByteArray.toPdfString() = Base64.getEncoder().encodeToString(this)
 

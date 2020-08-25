@@ -217,31 +217,73 @@ class OpprettJournalpostTest {
     }
 
     @Test
-    fun `gruppering av dager basert på type`() {
-        val json = objectMapper.convertValue<JsonNode>(listOf(
-            mapOf("dato" to "2020-07-20", "type" to "Fridag"),
-            mapOf("dato" to "2020-07-21", "type" to "Fridag"),
-            mapOf("dato" to "2020-07-22", "type" to "Fridag"),
-            mapOf("dato" to "2020-07-23", "type" to "Fridag"),
-            mapOf("dato" to "2020-07-24", "type" to "Fridag"),
-            mapOf("dato" to "2020-07-25", "type" to "Fridag"),
-            mapOf("dato" to "2020-07-26", "type" to "MinimumSykdomsgrad"),
-            mapOf("dato" to "2020-07-27", "type" to "MinimumSykdomsgrad"),
-            mapOf("dato" to "2020-07-28", "type" to "MinimumSykdomsgrad"),
-            mapOf("dato" to "2020-07-29", "type" to "Fridag"),
-            mapOf("dato" to "2020-07-30", "type" to "Fridag"),
-            mapOf("dato" to "2020-07-31", "type" to "Fridag"),
-            mapOf("dato" to "2020-08-04", "type" to "SykepengedagerOppbrukt"),
-            mapOf("dato" to "2020-08-05", "type" to "SykepengedagerOppbrukt"),
-            mapOf("dato" to "2020-08-06", "type" to "SykepengedagerOppbrukt")
-        )).settSammenIkkeUtbetalteDager()
+    fun `tar med arbeidsdager og kollapser over inneklemte fridager`() = runBlocking {
+        testRapid.sendTestMessage(vedtakMedGjenopptattArbeid())
+        val pdfRequest = requireNotNull(capturedPdfRequest)
+        val pdfPayload =
+            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), PdfPayload::class.java))
+        val expectedPdfPayload = PdfPayload(
+            fødselsnummer = "fnr",
+            fagsystemId = "77ATRH3QENHB5K4XUY4LQ7HRTY",
+            fom = LocalDate.of(2020, 5, 11),
+            tom = LocalDate.of(2020, 5, 25),
+            organisasjonsnummer = "orgnummer",
+            behandlingsdato = LocalDate.of(2020, 5, 4),
+            dagerIgjen = 233,
+            totaltTilUtbetaling = 8586,
+            ikkeUtbetalteDager = listOf(
+                IkkeUtbetalteDager(
+                    fom = LocalDate.of(2020, 5, 20),
+                    tom = LocalDate.of(2020, 5, 25),
+                    grunn = "Arbeidsdag"
+                )
+            ),
+            dagsats = 1431,
+            sykepengegrunnlag = 12345.0,
+            maksdato = null,
+            linjer = listOf(
+                Linje(
+                    fom = LocalDate.of(2020, 5, 16),
+                    tom = LocalDate.of(2020, 5, 19),
+                    grad = 100,
+                    beløp = 1431,
+                    mottaker = "arbeidsgiver"
+                )
+            )
+        )
+        assertEquals(expectedPdfPayload, pdfPayload)
+    }
 
-        assertEquals(listOf(
-            DagAcc(LocalDate.of(2020, 7, 20), LocalDate.of(2020, 7, 25), "Fridag"),
-            DagAcc(LocalDate.of(2020, 7, 26), LocalDate.of(2020, 7, 28), "MinimumSykdomsgrad"),
-            DagAcc(LocalDate.of(2020, 7, 29), LocalDate.of(2020, 7, 31), "Fridag"),
-            DagAcc(LocalDate.of(2020, 8, 4), LocalDate.of(2020, 8, 6), "SykepengedagerOppbrukt")
-        ), json)
+    @Test
+    fun `gruppering av dager basert på type`() {
+        val json = objectMapper.convertValue<JsonNode>(
+            listOf(
+                mapOf("dato" to "2020-07-20", "type" to "Fridag"),
+                mapOf("dato" to "2020-07-21", "type" to "Fridag"),
+                mapOf("dato" to "2020-07-22", "type" to "Fridag"),
+                mapOf("dato" to "2020-07-23", "type" to "Fridag"),
+                mapOf("dato" to "2020-07-24", "type" to "Fridag"),
+                mapOf("dato" to "2020-07-25", "type" to "Fridag"),
+                mapOf("dato" to "2020-07-26", "type" to "MinimumSykdomsgrad"),
+                mapOf("dato" to "2020-07-27", "type" to "MinimumSykdomsgrad"),
+                mapOf("dato" to "2020-07-28", "type" to "MinimumSykdomsgrad"),
+                mapOf("dato" to "2020-07-29", "type" to "Fridag"),
+                mapOf("dato" to "2020-07-30", "type" to "Fridag"),
+                mapOf("dato" to "2020-07-31", "type" to "Fridag"),
+                mapOf("dato" to "2020-08-04", "type" to "SykepengedagerOppbrukt"),
+                mapOf("dato" to "2020-08-05", "type" to "SykepengedagerOppbrukt"),
+                mapOf("dato" to "2020-08-06", "type" to "SykepengedagerOppbrukt")
+            )
+        ).settSammenIkkeUtbetalteDager()
+
+        assertEquals(
+            listOf(
+                DagAcc(LocalDate.of(2020, 7, 20), LocalDate.of(2020, 7, 25), "Fridag"),
+                DagAcc(LocalDate.of(2020, 7, 26), LocalDate.of(2020, 7, 28), "MinimumSykdomsgrad"),
+                DagAcc(LocalDate.of(2020, 7, 29), LocalDate.of(2020, 7, 31), "Fridag"),
+                DagAcc(LocalDate.of(2020, 8, 4), LocalDate.of(2020, 8, 6), "SykepengedagerOppbrukt")
+            ), json
+        )
     }
 
     private fun httpclient(): HttpClient {
@@ -604,6 +646,86 @@ class OpprettJournalpostTest {
     ],
     "fom": "2020-05-11",
     "tom": "2020-05-30",
+    "forbrukteSykedager": 15,
+    "gjenståendeSykedager": 233,
+    "sykepengegrunnlag": 12345.0,
+    "opprettet": "2020-05-04T11:26:30.23846",
+    "system_read_count": 0,
+    "@event_name": "utbetalt",
+    "@id": "e8eb9ffa-57b7-4fe0-b44c-471b2b306bb6",
+    "@opprettet": "2020-05-04T11:27:13.521398",
+    "@forårsaket_av": {
+        "event_name": "behov",
+        "id": "cf28fbba-562e-4841-b366-be1456fdccee",
+        "opprettet": "2020-05-04T11:26:47.088455"
+    }
+}
+    """
+
+    @Language("JSON")
+    private fun vedtakMedGjenopptattArbeid() = """{
+    "aktørId": "aktørId",
+    "fødselsnummer": "fnr",
+    "organisasjonsnummer": "orgnummer",
+    "hendelser": [
+        "7c1a1edb-60b9-4a1f-b976-ef39d4d5021c",
+        "798f60a1-6f6f-4d07-a036-1f89bd36baca",
+        "ee8bc585-e898-4f4c-8662-f2a9b394896e"
+    ],
+    "utbetalt": [
+        {
+            "mottaker": "orgnummer",
+            "fagområde": "SPREF",
+            "fagsystemId": "77ATRH3QENHB5K4XUY4LQ7HRTY",
+            "førsteSykepengedag": "",
+            "totalbeløp": 8586,
+            "utbetalingslinjer": [
+                {
+                    "fom": "2020-05-16",
+                    "tom": "2020-05-19",
+                    "dagsats": 1431,
+                    "beløp": 1431,
+                    "grad": 100.0,
+                    "sykedager": 15
+                }
+            ]
+        },
+        {
+            "mottaker": "fnr",
+            "fagområde": "SP",
+            "fagsystemId": "353OZWEIBBAYZPKU6WYKTC54SE",
+            "totalbeløp": 0,
+            "utbetalingslinjer": []
+        }
+    ],
+    "ikkeUtbetalteDager": [
+        {
+            "dato": "2020-05-20",
+            "type": "Arbeidsdag"
+        },
+        {
+            "dato": "2020-05-21",
+            "type": "Arbeidsdag"
+        },
+        {
+            "dato": "2020-05-22",
+            "type": "Arbeidsdag"
+        },
+        {
+            "dato": "2020-05-23",
+            "type": "Fridag"
+        },
+        {
+            "dato": "2020-05-24",
+            "type": "Fridag"
+        },
+        {
+            "dato": "2020-05-25",
+            "type": "Arbeidsdag"
+        }
+    ],
+    "fom": "2020-05-11",
+    "tom": "2020-05-25",
     "forbrukteSykedager": 15,
     "gjenståendeSykedager": 233,
     "sykepengegrunnlag": 12345.0,

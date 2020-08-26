@@ -1,7 +1,5 @@
-package no.nav.helse
+package no.nav.helse.vedtak
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -15,6 +13,11 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
+import no.nav.helse.JoarkClient
+import no.nav.helse.JournalpostPayload
+import no.nav.helse.PdfClient
+import no.nav.helse.StsRestClient
+import no.nav.helse.objectMapper
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -24,20 +27,22 @@ import java.time.LocalDate
 import java.util.Base64
 
 @KtorExperimentalAPI
-class OpprettJournalpostTest {
+class VedtakRiverTest {
 
     private val testRapid = TestRapid()
     private val stsMock: StsRestClient = mockk {
         coEvery { token() }.returns("6B70C162-8AAB-4B56-944D-7F092423FE4B")
     }
     private val mockClient = httpclient()
-    private val joark = spyk(JoarkClient("https://url.no", stsMock, mockClient))
+    private val joarkClient = spyk(JoarkClient("https://url.no", stsMock, mockClient))
     private val pdfClient = PdfClient(mockClient)
+    private val vedtakMediator = VedtakMediator(pdfClient, joarkClient)
+
     private var capturedJoarkRequest: HttpRequestData? = null
     private var capturedPdfRequest: HttpRequestData? = null
 
     init {
-        OpprettJournalpost(testRapid, joark, pdfClient)
+        VedtakRiver(testRapid, vedtakMediator)
     }
 
     @BeforeEach
@@ -59,9 +64,9 @@ class OpprettJournalpostTest {
 
         val pdfRequest = requireNotNull(capturedPdfRequest)
         val pdfPayload =
-            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), PdfPayload::class.java))
+            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), VedtakPdfPayload::class.java))
 
-        val expectedPdfPayload = PdfPayload(
+        val expectedPdfPayload = VedtakPdfPayload(
             fødselsnummer = "fnr",
             fagsystemId = "77ATRH3QENHB5K4XUY4LQ7HRTY",
             fom = LocalDate.of(2020, 5, 11),
@@ -75,7 +80,7 @@ class OpprettJournalpostTest {
             sykepengegrunnlag = 12345.0,
             maksdato = null,
             linjer = listOf(
-                Linje(
+                VedtakPdfPayload.Linje(
                     fom = LocalDate.of(2020, 5, 11),
                     tom = LocalDate.of(2020, 5, 30),
                     grad = 100,
@@ -99,9 +104,9 @@ class OpprettJournalpostTest {
 
         val pdfRequest = requireNotNull(capturedPdfRequest)
         val pdfPayload =
-            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), PdfPayload::class.java))
+            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), VedtakPdfPayload::class.java))
 
-        val expectedPdfPayload = PdfPayload(
+        val expectedPdfPayload = VedtakPdfPayload(
             fødselsnummer = "12345678910",
             fagsystemId = "V7E6ZHOCKJDNZNQMCAU23MQ47A",
             fom = LocalDate.of(2020, 5, 16),
@@ -131,9 +136,9 @@ class OpprettJournalpostTest {
 
         val pdfRequest = requireNotNull(capturedPdfRequest)
         val pdfPayload =
-            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), PdfPayload::class.java))
+            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), VedtakPdfPayload::class.java))
 
-        val expectedPdfPayload = PdfPayload(
+        val expectedPdfPayload = VedtakPdfPayload(
             fødselsnummer = "12345678910",
             fagsystemId = "V7E6ZHOCKJDNZNQMCAU23MQ47A",
             fom = LocalDate.of(2020, 5, 16),
@@ -147,14 +152,14 @@ class OpprettJournalpostTest {
             sykepengegrunnlag = 420.69,
             maksdato = LocalDate.of(2020, 7, 17),
             linjer = listOf(
-                Linje(
+                VedtakPdfPayload.Linje(
                     fom = LocalDate.of(2020, 5, 11),
                     tom = LocalDate.of(2020, 5, 20),
                     grad = 100,
                     beløp = 1431,
                     mottaker = "arbeidsgiver"
                 ),
-                Linje(
+                VedtakPdfPayload.Linje(
                     fom = LocalDate.of(2020, 5, 21),
                     tom = LocalDate.of(2020, 5, 30),
                     grad = 50,
@@ -181,9 +186,9 @@ class OpprettJournalpostTest {
 
         val pdfRequest = requireNotNull(capturedPdfRequest)
         val pdfPayload =
-            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), PdfPayload::class.java))
+            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), VedtakPdfPayload::class.java))
 
-        val expectedPdfPayload = PdfPayload(
+        val expectedPdfPayload = VedtakPdfPayload(
             fødselsnummer = "fnr",
             fagsystemId = "77ATRH3QENHB5K4XUY4LQ7HRTY",
             fom = LocalDate.of(2020, 5, 11),
@@ -193,7 +198,7 @@ class OpprettJournalpostTest {
             dagerIgjen = 233,
             totaltTilUtbetaling = 8586,
             ikkeUtbetalteDager = listOf(
-                IkkeUtbetalteDager(
+                VedtakPdfPayload.IkkeUtbetalteDager(
                     fom = LocalDate.of(2020, 5, 11),
                     tom = LocalDate.of(2020, 5, 15),
                     grunn = "Sykdomsgrad under 20%"
@@ -203,7 +208,7 @@ class OpprettJournalpostTest {
             sykepengegrunnlag = 12345.0,
             maksdato = null,
             linjer = listOf(
-                Linje(
+                VedtakPdfPayload.Linje(
                     fom = LocalDate.of(2020, 5, 16),
                     tom = LocalDate.of(2020, 5, 30),
                     grad = 100,
@@ -221,8 +226,8 @@ class OpprettJournalpostTest {
         testRapid.sendTestMessage(vedtakMedGjenopptattArbeid())
         val pdfRequest = requireNotNull(capturedPdfRequest)
         val pdfPayload =
-            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), PdfPayload::class.java))
-        val expectedPdfPayload = PdfPayload(
+            requireNotNull(objectMapper.readValue(pdfRequest.body.toByteArray(), VedtakPdfPayload::class.java))
+        val expectedPdfPayload = VedtakPdfPayload(
             fødselsnummer = "fnr",
             fagsystemId = "77ATRH3QENHB5K4XUY4LQ7HRTY",
             fom = LocalDate.of(2020, 5, 11),
@@ -232,7 +237,7 @@ class OpprettJournalpostTest {
             dagerIgjen = 233,
             totaltTilUtbetaling = 8586,
             ikkeUtbetalteDager = listOf(
-                IkkeUtbetalteDager(
+                VedtakPdfPayload.IkkeUtbetalteDager(
                     fom = LocalDate.of(2020, 5, 20),
                     tom = LocalDate.of(2020, 5, 25),
                     grunn = "Arbeidsdag"
@@ -242,7 +247,7 @@ class OpprettJournalpostTest {
             sykepengegrunnlag = 12345.0,
             maksdato = null,
             linjer = listOf(
-                Linje(
+                VedtakPdfPayload.Linje(
                     fom = LocalDate.of(2020, 5, 16),
                     tom = LocalDate.of(2020, 5, 19),
                     grad = 100,
@@ -252,38 +257,6 @@ class OpprettJournalpostTest {
             )
         )
         assertEquals(expectedPdfPayload, pdfPayload)
-    }
-
-    @Test
-    fun `gruppering av dager basert på type`() {
-        val json = objectMapper.convertValue<JsonNode>(
-            listOf(
-                mapOf("dato" to "2020-07-20", "type" to "Fridag"),
-                mapOf("dato" to "2020-07-21", "type" to "Fridag"),
-                mapOf("dato" to "2020-07-22", "type" to "Fridag"),
-                mapOf("dato" to "2020-07-23", "type" to "Fridag"),
-                mapOf("dato" to "2020-07-24", "type" to "Fridag"),
-                mapOf("dato" to "2020-07-25", "type" to "Fridag"),
-                mapOf("dato" to "2020-07-26", "type" to "MinimumSykdomsgrad"),
-                mapOf("dato" to "2020-07-27", "type" to "MinimumSykdomsgrad"),
-                mapOf("dato" to "2020-07-28", "type" to "MinimumSykdomsgrad"),
-                mapOf("dato" to "2020-07-29", "type" to "Fridag"),
-                mapOf("dato" to "2020-07-30", "type" to "Fridag"),
-                mapOf("dato" to "2020-07-31", "type" to "Fridag"),
-                mapOf("dato" to "2020-08-04", "type" to "SykepengedagerOppbrukt"),
-                mapOf("dato" to "2020-08-05", "type" to "SykepengedagerOppbrukt"),
-                mapOf("dato" to "2020-08-06", "type" to "SykepengedagerOppbrukt")
-            )
-        ).settSammenIkkeUtbetalteDager()
-
-        assertEquals(
-            listOf(
-                DagAcc(LocalDate.of(2020, 7, 20), LocalDate.of(2020, 7, 25), "Fridag"),
-                DagAcc(LocalDate.of(2020, 7, 26), LocalDate.of(2020, 7, 28), "MinimumSykdomsgrad"),
-                DagAcc(LocalDate.of(2020, 7, 29), LocalDate.of(2020, 7, 31), "Fridag"),
-                DagAcc(LocalDate.of(2020, 8, 4), LocalDate.of(2020, 8, 6), "SykepengedagerOppbrukt")
-            ), json
-        )
     }
 
     private fun httpclient(): HttpClient {
@@ -316,18 +289,18 @@ class OpprettJournalpostTest {
             tema = "SYK",
             behandlingstema = "ab0061",
             journalfoerendeEnhet = "9999",
-            bruker = Bruker(
+            bruker = JournalpostPayload.Bruker(
                 id = "fnr",
                 idType = "FNR"
             ),
-            sak = Sak(
+            sak = JournalpostPayload.Sak(
                 sakstype = "GENERELL_SAK"
             ),
             dokumenter = listOf(
-                Dokument(
+                JournalpostPayload.Dokument(
                     tittel = "Sykepenger behandlet i ny løsning, 11.05.2020 - 30.05.2020",
                     dokumentvarianter = listOf(
-                        DokumentVariant(
+                        JournalpostPayload.Dokument.DokumentVariant(
                             filtype = "PDFA",
                             fysiskDokument = Base64.getEncoder().encodeToString("Test".toByteArray()),
                             variantformat = "ARKIV"
@@ -345,18 +318,18 @@ class OpprettJournalpostTest {
             tema = "SYK",
             behandlingstema = "ab0061",
             journalfoerendeEnhet = "9999",
-            bruker = Bruker(
+            bruker = JournalpostPayload.Bruker(
                 id = "12345678910",
                 idType = "FNR"
             ),
-            sak = Sak(
+            sak = JournalpostPayload.Sak(
                 sakstype = "GENERELL_SAK"
             ),
             dokumenter = listOf(
-                Dokument(
+                JournalpostPayload.Dokument(
                     tittel = "Sykepenger behandlet i ny løsning, 16.05.2020 - 17.05.2020",
                     dokumentvarianter = listOf(
-                        DokumentVariant(
+                        JournalpostPayload.Dokument.DokumentVariant(
                             filtype = "PDFA",
                             fysiskDokument = Base64.getEncoder().encodeToString("Test".toByteArray()),
                             variantformat = "ARKIV"
@@ -374,18 +347,18 @@ class OpprettJournalpostTest {
             tema = "SYK",
             behandlingstema = "ab0061",
             journalfoerendeEnhet = "9999",
-            bruker = Bruker(
+            bruker = JournalpostPayload.Bruker(
                 id = "12345678910",
                 idType = "FNR"
             ),
-            sak = Sak(
+            sak = JournalpostPayload.Sak(
                 sakstype = "GENERELL_SAK"
             ),
             dokumenter = listOf(
-                Dokument(
+                JournalpostPayload.Dokument(
                     tittel = "Sykepenger behandlet i ny løsning, 16.05.2020 - 17.05.2020",
                     dokumentvarianter = listOf(
-                        DokumentVariant(
+                        JournalpostPayload.Dokument.DokumentVariant(
                             filtype = "PDFA",
                             fysiskDokument = Base64.getEncoder().encodeToString("Test".toByteArray()),
                             variantformat = "ARKIV"

@@ -7,7 +7,8 @@ import io.ktor.client.request.post
 import io.ktor.client.statement.HttpStatement
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import java.util.*
+import net.logstash.logback.argument.StructuredArguments.keyValue
+import java.util.UUID
 
 class JoarkClient(
     private val baseUrl: String,
@@ -23,7 +24,7 @@ class JoarkClient(
         }
             .execute {
                 if (it.status.value !in 200..300) {
-                    log.warn("Feil fra Joark: ${it.receive<String>()}, statusCode: $it.status")
+                    log.warn("Feil fra Joark: {}", keyValue("response", it.receive<String>()))
                     false
                 } else true
             }
@@ -40,25 +41,25 @@ data class JournalpostPayload(
     val bruker: Bruker,
     val sak: Sak = Sak(),
     val dokumenter: List<Dokument>
-)
+) {
+    data class Bruker(
+        val id: String,
+        val idType: String = "FNR"
+    )
 
-data class Bruker(
-    val id: String,
-    val idType: String = "FNR"
-)
+    data class Sak(
+        val sakstype: String = "GENERELL_SAK"
+    )
 
-data class Sak(
-    val sakstype: String = "GENERELL_SAK"
-)
+    data class Dokument(
+        val tittel: String,
+        val dokumentvarianter: List<DokumentVariant>
 
-data class Dokument(
-    val tittel: String,
-    val dokumentvarianter: List<DokumentVariant>
-
-)
-
-data class DokumentVariant(
-    val filtype: String = "PDFA",
-    val fysiskDokument: String,
-    val variantformat: String = "ARKIV"
-)
+    ) {
+        data class DokumentVariant(
+            val filtype: String = "PDFA",
+            val fysiskDokument: String,
+            val variantformat: String = "ARKIV"
+        )
+    }
+}

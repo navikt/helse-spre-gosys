@@ -9,6 +9,8 @@ import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.vedtak.VedtakRiver
+import no.nav.helse.vedtak.VedtakMediator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -17,6 +19,7 @@ internal val objectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
 
 internal val log: Logger = LoggerFactory.getLogger("spregosys")
+internal val sikkerLogg: Logger = LoggerFactory.getLogger("tjenestekall")
 
 fun main() {
     val rapidsConnection = launchApplication(System.getenv())
@@ -34,7 +37,9 @@ fun launchApplication(
     val joarkClient = JoarkClient(requireNotNull(environment["JOARK_BASE_URL"]), stsRestClient, httpClient)
     val pdfClient = PdfClient(httpClient)
 
+    val vedtakMediator = VedtakMediator(pdfClient, joarkClient)
+
     return RapidApplication.create(environment).apply {
-        OpprettJournalpost(this, joarkClient, pdfClient)
+        VedtakRiver(this, vedtakMediator)
     }
 }

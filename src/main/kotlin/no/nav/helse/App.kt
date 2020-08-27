@@ -7,10 +7,12 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.HttpClient
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
+import no.nav.helse.annullering.AnnulleringMediator
+import no.nav.helse.annullering.AnnulleringRiver
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.vedtak.VedtakRiver
 import no.nav.helse.vedtak.VedtakMediator
+import no.nav.helse.vedtak.VedtakRiver
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -38,8 +40,10 @@ fun launchApplication(
     val pdfClient = PdfClient(httpClient)
 
     val vedtakMediator = VedtakMediator(pdfClient, joarkClient)
+    val annulleringMediator = AnnulleringMediator(pdfClient, joarkClient)
 
     return RapidApplication.create(environment).apply {
         VedtakRiver(this, vedtakMediator)
+        AnnulleringRiver(this, annulleringMediator)
     }
 }

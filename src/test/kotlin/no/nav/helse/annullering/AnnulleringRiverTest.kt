@@ -8,6 +8,7 @@ import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.fullPath
+import io.ktor.util.KtorExperimentalAPI
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.spyk
@@ -51,6 +52,7 @@ internal class AnnulleringRiverTest {
         testRapid.reset()
     }
 
+    @KtorExperimentalAPI
     @Test
     fun `journalfører en annullering`() {
         runBlocking {

@@ -2,6 +2,7 @@ package no.nav.helse.annullering
 
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.asLocalDate
+import no.nav.helse.rapids_rivers.asLocalDateTime
 import java.time.LocalDate
 import java.util.UUID
 
@@ -24,18 +25,11 @@ class AnnulleringMessage private constructor(
             aktørId = packet["aktørId"].asText(),
             organisasjonsnummer = packet["organisasjonsnummer"].asText(),
             fagsystemId = packet["fagsystemId"].asText(),
-            fom = packet["fom"].asLocalDate(),
-            tom = packet["tom"].asLocalDate(),
-            saksbehandlerId = packet["saksbehandlerId"].asText(),
-            dato = packet["dato"].asLocalDate(),
-            linjer = packet["linjer"].map {
-                Linje(
-                    fom = it["fom"].asLocalDate(),
-                    tom = it["tom"].asLocalDate(),
-                    grad = it["grad"].asInt(),
-                    beløp = it["beløp"].asInt()
-                )
-            }
+            fom = requireNotNull(packet.utbetalingslinjer().map { it.fom }.min()),
+            tom = requireNotNull(packet.utbetalingslinjer().map { it.tom }.max()),
+            saksbehandlerId = packet["saksbehandlerEpost"].asText(),
+            dato = packet["annullertAvSaksbehandler"].asLocalDateTime().toLocalDate(),
+            linjer = packet.utbetalingslinjer()
         )
 
     internal fun toPdfPayload() = AnnulleringPdfPayload(
@@ -61,5 +55,14 @@ class AnnulleringMessage private constructor(
         val tom: LocalDate,
         val grad: Int,
         val beløp: Int
+    )
+}
+
+private fun JsonMessage.utbetalingslinjer() = this["utbetalingslinjer"].map {
+    AnnulleringMessage.Linje(
+        fom = it["fom"].asLocalDate(),
+        tom = it["tom"].asLocalDate(),
+        grad = it["grad"].asInt(),
+        beløp = it["beløp"].asInt()
     )
 }

@@ -25,17 +25,14 @@ class AnnulleringRiver(
                     "aktørId",
                     "organisasjonsnummer",
                     "fagsystemId",
-                    "saksbehandlerId"
+                    "saksbehandlerEpost"
                 )
-                it.requireArray("linjer")
-                {
+                it.require("annullertAvSaksbehandler", JsonNode::asLocalDateTime)
+                it.requireArray("utbetalingslinjer") {
                     require("fom", JsonNode::asLocalDate)
                     require("tom", JsonNode::asLocalDate)
                     requireKey("grad", "beløp")
                 }
-                it.require("fom", JsonNode::asLocalDate)
-                it.require("tom", JsonNode::asLocalDate)
-                it.require("dato", JsonNode::asLocalDate)
             }
         }.register(this)
     }

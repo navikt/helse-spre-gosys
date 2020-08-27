@@ -76,8 +76,8 @@ internal class AnnulleringRiverTest {
                 fom = LocalDate.of(2020, 1, 1),
                 tom = LocalDate.of(2020, 1, 10),
                 organisasjonsnummer = "orgnummer",
-                dato = LocalDate.of(2020, 2, 1),
-                saksbehandlerId = "saksbehandlerId",
+                dato = LocalDate.of(2020, 5, 4),
+                saksbehandlerId = "sara.saksbehandler@nav.no",
                 linjer = listOf(
                     AnnulleringPdfPayload.Linje(
                         fom = LocalDate.of(2020, 1, 1),
@@ -125,11 +125,9 @@ internal class AnnulleringRiverTest {
             "aktørId": "aktørid",
             "organisasjonsnummer": "orgnummer",
             "fagsystemId": "77ATRH3QENHB5K4XUY4LQ7HRTY",
-            "saksbehandlerId": "saksbehandlerId",
-            "fom": "2020-01-01",
-            "tom": "2020-01-10",
-            "dato": "2020-02-01",
-            "linjer": [
+            "saksbehandlerEpost": "sara.saksbehandler@nav.no",
+            "annullertAvSaksbehandler": "2020-05-04T11:26:47.088455",
+            "utbetalingslinjer": [
                 {
                   "fom": "2020-01-01",
                   "tom": "2020-01-10",

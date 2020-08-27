@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.Base64
 import java.util.UUID
 
@@ -76,7 +77,7 @@ internal class AnnulleringRiverTest {
                 fom = LocalDate.of(2020, 1, 1),
                 tom = LocalDate.of(2020, 1, 10),
                 organisasjonsnummer = "orgnummer",
-                dato = LocalDate.of(2020, 5, 4),
+                dato = LocalDateTime.of(2020, 5, 4, 8,8,0),
                 saksbehandlerId = "sara.saksbehandler@nav.no",
                 linjer = listOf(
                     AnnulleringPdfPayload.Linje(
@@ -126,7 +127,7 @@ internal class AnnulleringRiverTest {
             "organisasjonsnummer": "orgnummer",
             "fagsystemId": "77ATRH3QENHB5K4XUY4LQ7HRTY",
             "saksbehandlerEpost": "sara.saksbehandler@nav.no",
-            "annullertAvSaksbehandler": "2020-05-04T11:26:47.088455",
+            "annullertAvSaksbehandler": "2020-05-04T08:08:00.00000",
             "utbetalingslinjer": [
                 {
                   "fom": "2020-01-01",

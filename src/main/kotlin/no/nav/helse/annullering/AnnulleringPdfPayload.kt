@@ -1,6 +1,7 @@
 package no.nav.helse.annullering
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class AnnulleringPdfPayload(
     val fødselsnummer: String,
@@ -9,7 +10,7 @@ data class AnnulleringPdfPayload(
     val tom: LocalDate,
     val organisasjonsnummer: String,
     val saksbehandlerId: String,
-    val dato: LocalDate,
+    val dato: LocalDateTime,
     val linjer: List<Linje>
 ) {
     data class Linje(

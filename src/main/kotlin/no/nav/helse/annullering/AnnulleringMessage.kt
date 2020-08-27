@@ -4,6 +4,7 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asLocalDateTime
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class AnnulleringMessage private constructor(
@@ -15,7 +16,7 @@ class AnnulleringMessage private constructor(
     private val organisasjonsnummer: String,
     private val fagsystemId: String,
     private val saksbehandlerId: String,
-    private val dato: LocalDate,
+    private val dato: LocalDateTime,
     private val linjer: List<Linje>
 ) {
     constructor(packet: JsonMessage) :
@@ -28,7 +29,7 @@ class AnnulleringMessage private constructor(
             fom = requireNotNull(packet.utbetalingslinjer().map { it.fom }.min()),
             tom = requireNotNull(packet.utbetalingslinjer().map { it.tom }.max()),
             saksbehandlerId = packet["saksbehandlerEpost"].asText(),
-            dato = packet["annullertAvSaksbehandler"].asLocalDateTime().toLocalDate(),
+            dato = packet["annullertAvSaksbehandler"].asLocalDateTime(),
             linjer = packet.utbetalingslinjer()
         )
 

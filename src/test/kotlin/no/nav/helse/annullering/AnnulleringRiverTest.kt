@@ -1,33 +1,24 @@
 package no.nav.helse.annullering
 
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respond
-import io.ktor.client.engine.mock.toByteArray
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.request.HttpRequestData
-import io.ktor.http.fullPath
-import io.ktor.util.KtorExperimentalAPI
+import io.ktor.client.*
+import io.ktor.client.engine.mock.*
+import io.ktor.client.features.json.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.util.*
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.JoarkClient
-import no.nav.helse.JournalpostPayload
-import no.nav.helse.PdfClient
-import no.nav.helse.StsRestClient
-import no.nav.helse.objectMapper
+import no.nav.helse.*
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
-import no.nav.helse.vedtak.VedtakPdfPayload
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 
 internal class AnnulleringRiverTest {
     private val hendelseId = UUID.randomUUID()
@@ -155,7 +146,7 @@ internal class AnnulleringRiverTest {
             ),
             dokumenter = listOf(
                 JournalpostPayload.Dokument(
-                    tittel = "Utbetaling annullert i ny løsning 2020-01-01 - 2020-01-10",
+                    tittel = "Utbetaling annullert i ny løsning 01.01.2020 - 10.01.2020",
                     dokumentvarianter = listOf(
                         JournalpostPayload.Dokument.DokumentVariant(
                             filtype = "PDFA",

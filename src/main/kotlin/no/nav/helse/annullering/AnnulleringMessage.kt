@@ -5,20 +5,25 @@ import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asLocalDateTime
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class AnnulleringMessage private constructor(
     val hendelseId: UUID,
     val fødselsnummer: String,
-    val fom: LocalDate,
-    val tom: LocalDate,
     val aktørId: String,
+    private val fom: LocalDate,
+    private val tom: LocalDate,
     private val organisasjonsnummer: String,
     private val fagsystemId: String,
     private val saksbehandlerId: String,
     private val dato: LocalDateTime,
     private val linjer: List<Linje>
 ) {
+    private val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+    val norskFom: String = fom.format(formatter)
+    val norskTom: String = tom.format(formatter)
+
     constructor(packet: JsonMessage) :
         this(
             hendelseId = UUID.fromString(packet["@id"].asText()),

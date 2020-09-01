@@ -18,7 +18,7 @@ class AnnulleringMediator(
                 bruker = JournalpostPayload.Bruker(id = annulleringMessage.fødselsnummer),
                 dokumenter = listOf(
                     JournalpostPayload.Dokument(
-                        tittel = "Utbetaling annullert i ny løsning ${annulleringMessage.fom} - ${annulleringMessage.tom}",
+                        tittel = "Utbetaling annullert i ny løsning ${annulleringMessage.norskFom} - ${annulleringMessage.norskTom}",
                         dokumentvarianter = listOf(JournalpostPayload.Dokument.DokumentVariant(fysiskDokument = pdf))
                     )
                 )

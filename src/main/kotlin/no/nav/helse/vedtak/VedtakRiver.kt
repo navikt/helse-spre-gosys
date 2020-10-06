@@ -28,7 +28,9 @@ class VedtakRiver(
                     "gjenståendeSykedager",
                     "utbetalt",
                     "ikkeUtbetalteDager",
-                    "sykepengegrunnlag"
+                    "sykepengegrunnlag",
+                    "automatiskBehandling",
+                    "godkjentAv"
                 )
                 it.interestedIn("maksdato", JsonNode::asLocalDate)
                 it.require("fom", JsonNode::asLocalDate)

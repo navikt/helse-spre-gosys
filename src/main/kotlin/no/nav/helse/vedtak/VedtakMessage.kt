@@ -19,6 +19,8 @@ class VedtakMessage private constructor(
     private val tom: LocalDate,
     private val organisasjonsnummer: String,
     private val gjenståendeSykedager: Int,
+    private val automatiskBehandling: Boolean,
+    private val godkjentAv: String,
     private val maksdato: LocalDate?,
     private val sykepengegrunnlag: Double,
     private val utbetaling: Utbetaling,
@@ -38,6 +40,8 @@ class VedtakMessage private constructor(
             tom = packet["tom"].asLocalDate(),
             organisasjonsnummer = packet["organisasjonsnummer"].asText(),
             gjenståendeSykedager = packet["gjenståendeSykedager"].asInt(),
+            automatiskBehandling = packet["automatiskBehandling"].asBoolean(),
+            godkjentAv = packet["godkjentAv"].asText(),
             maksdato = packet["maksdato"].asOptionalLocalDate(),
             sykepengegrunnlag = packet["sykepengegrunnlag"].asDouble(),
             utbetaling = packet["utbetalt"].find { it["fagområde"].asText() == "SPREF" }!!.let { utbetaling ->
@@ -84,6 +88,8 @@ class VedtakMessage private constructor(
         behandlingsdato = opprettet.toLocalDate(),
         organisasjonsnummer = organisasjonsnummer,
         dagerIgjen = gjenståendeSykedager,
+        automatiskBehandling = automatiskBehandling,
+        godkjentAv = godkjentAv,
         maksdato = maksdato,
         sykepengegrunnlag = sykepengegrunnlag,
         ikkeUtbetalteDager = ikkeUtbetalteDager

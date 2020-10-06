@@ -11,6 +11,8 @@ data class VedtakPdfPayload(
     val organisasjonsnummer: String,
     val behandlingsdato: LocalDate,
     val dagerIgjen: Int,
+    val automatiskBehandling: Boolean,
+    val godkjentAv: String,
     val totaltTilUtbetaling: Int,
     val ikkeUtbetalteDager: List<IkkeUtbetalteDager>,
     val dagsats: Int?,

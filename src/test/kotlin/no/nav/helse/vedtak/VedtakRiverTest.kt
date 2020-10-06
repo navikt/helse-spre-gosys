@@ -37,6 +37,7 @@ class VedtakRiverTest {
     private val joarkClient = spyk(JoarkClient("https://url.no", stsMock, mockClient))
     private val pdfClient = PdfClient(mockClient)
     private val vedtakMediator = VedtakMediator(pdfClient, joarkClient)
+    private val godkjentAv = "A123456"
 
     private var capturedJoarkRequest: HttpRequestData? = null
     private var capturedPdfRequest: HttpRequestData? = null
@@ -74,6 +75,8 @@ class VedtakRiverTest {
             organisasjonsnummer = "orgnummer",
             behandlingsdato = LocalDate.of(2020, 5, 4),
             dagerIgjen = 233,
+            automatiskBehandling = false,
+            godkjentAv = godkjentAv,
             totaltTilUtbetaling = 8586,
             ikkeUtbetalteDager = listOf(),
             dagsats = 1431,
@@ -114,6 +117,8 @@ class VedtakRiverTest {
             organisasjonsnummer = "123456789",
             behandlingsdato = LocalDate.of(2020, 5, 20),
             dagerIgjen = 48,
+            automatiskBehandling = false,
+            godkjentAv = godkjentAv,
             totaltTilUtbetaling = 0,
             ikkeUtbetalteDager = listOf(),
             dagsats = null,
@@ -146,6 +151,8 @@ class VedtakRiverTest {
             organisasjonsnummer = "123456789",
             behandlingsdato = LocalDate.of(2020, 5, 20),
             dagerIgjen = 48,
+            automatiskBehandling = false,
+            godkjentAv = godkjentAv,
             totaltTilUtbetaling = 15000,
             ikkeUtbetalteDager = listOf(),
             dagsats = 1431,
@@ -196,6 +203,8 @@ class VedtakRiverTest {
             organisasjonsnummer = "orgnummer",
             behandlingsdato = LocalDate.of(2020, 5, 4),
             dagerIgjen = 233,
+            automatiskBehandling = false,
+            godkjentAv = godkjentAv,
             totaltTilUtbetaling = 8586,
             ikkeUtbetalteDager = listOf(
                 VedtakPdfPayload.IkkeUtbetalteDager(
@@ -235,6 +244,8 @@ class VedtakRiverTest {
             organisasjonsnummer = "orgnummer",
             behandlingsdato = LocalDate.of(2020, 5, 4),
             dagerIgjen = 233,
+            automatiskBehandling = false,
+            godkjentAv = godkjentAv,
             totaltTilUtbetaling = 8586,
             ikkeUtbetalteDager = listOf(
                 VedtakPdfPayload.IkkeUtbetalteDager(
@@ -410,6 +421,8 @@ class VedtakRiverTest {
             "fom": "2020-05-11",
             "tom": "2020-05-30",
             "forbrukteSykedager": 15,
+            "automatiskBehandling": false,
+            "godkjentAv": "$godkjentAv",
             "gjenståendeSykedager": 233,
             "sykepengegrunnlag": 12345.0,
             "opprettet": "2020-05-04T11:26:30.23846",
@@ -455,6 +468,8 @@ class VedtakRiverTest {
           "fom": "2020-05-16",
           "tom": "2020-05-17",
           "forbrukteSykedager": 200,
+          "automatiskBehandling": false,
+          "godkjentAv": "$godkjentAv",
           "gjenståendeSykedager": 48,
           "maksdato": null,
           "opprettet": "2020-05-19T23:22:53.123929",
@@ -531,6 +546,8 @@ class VedtakRiverTest {
           "tom": "2020-05-17",
           "forbrukteSykedager": 200,
           "gjenståendeSykedager": 48,
+          "automatiskBehandling": false,
+          "godkjentAv": "$godkjentAv",
           "maksdato": "2020-07-17",
           "sykepengegrunnlag": 420.69,
           "opprettet": "2020-05-19T23:22:53.123929",
@@ -620,6 +637,8 @@ class VedtakRiverTest {
     "fom": "2020-05-11",
     "tom": "2020-05-30",
     "forbrukteSykedager": 15,
+    "automatiskBehandling": false,
+    "godkjentAv": "$godkjentAv",
     "gjenståendeSykedager": 233,
     "sykepengegrunnlag": 12345.0,
     "opprettet": "2020-05-04T11:26:30.23846",
@@ -700,6 +719,8 @@ class VedtakRiverTest {
     "fom": "2020-05-11",
     "tom": "2020-05-25",
     "forbrukteSykedager": 15,
+    "automatiskBehandling": false,
+    "godkjentAv": "$godkjentAv",
     "gjenståendeSykedager": 233,
     "sykepengegrunnlag": 12345.0,
     "opprettet": "2020-05-04T11:26:30.23846",

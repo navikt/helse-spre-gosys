@@ -24,8 +24,9 @@ class JoarkClient(
         }
             .execute {
                 if (it.status.value !in 200..300) {
-                    log.warn("Feil fra Joark: {}", keyValue("response", it.receive<String>()))
-                    false
+                    val error = it.receive<String>()
+                    log.error("Feil fra Joark: {}", keyValue("response", error))
+                    throw RuntimeException("Feil fra Joark: $error")
                 } else true
             }
 

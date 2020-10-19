@@ -14,12 +14,14 @@ class PdfClient(private val httpClient: HttpClient) {
             contentType(Json)
             body = vedtak
         }.toPdfString()
+            .also { if (it.isNullOrBlank()) error("Fikk tom pdf") }
 
     suspend fun hentAnnulleringPdf(annullering: AnnulleringPdfPayload): String =
         httpClient.post<ByteArray>("http://spre-gosys-pdf.tbd.svc.nais.local/api/v1/genpdf/spre-gosys/annullering") {
             contentType(Json)
             body = annullering
         }.toPdfString()
+            .also { if (it.isNullOrBlank()) error("Fikk tom pdf") }
 
     private fun ByteArray.toPdfString() = Base64.getEncoder().encodeToString(this)
 }

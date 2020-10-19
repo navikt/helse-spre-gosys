@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:fa839faa1c")
+    implementation("com.github.navikt:rapids-and-rivers:a66bba7")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
 

@@ -12,7 +12,7 @@ import no.nav.helse.sikkerLogg
 import java.util.UUID
 
 class VedtakRiver(
-    rapidsConnection: RapidsConnection,
+    private val rapidsConnection: RapidsConnection,
     private val vedtakMediator: VedtakMediator
 ) : River.PacketListener {
     init {
@@ -43,7 +43,13 @@ class VedtakRiver(
         log.info("Oppdaget utbetalingevent {}", keyValue("id", UUID.fromString(packet["@id"].asText())))
         sikkerLogg.info(packet.toJson())
 
-        vedtakMediator.opprettVedtak(VedtakMessage(packet))
+        try {
+            vedtakMediator.opprettVedtak(VedtakMessage(packet))
+        } catch (error: RuntimeException) {
+            log.error("Kritisk feil, stopper lytter og ber om restart, se sikker logg for fullstendig feilmelding")
+            sikkerLogg.error("Kritisk feil, stopper lytter og ber om restart", error)
+            rapidsConnection.stop()
+        }
     }
 }
 

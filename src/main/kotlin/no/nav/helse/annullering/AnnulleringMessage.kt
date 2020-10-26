@@ -31,8 +31,8 @@ class AnnulleringMessage private constructor(
             aktørId = packet["aktørId"].asText(),
             organisasjonsnummer = packet["organisasjonsnummer"].asText(),
             fagsystemId = packet["fagsystemId"].asText(),
-            fom = requireNotNull(packet.utbetalingslinjer().map { it.fom }.min()),
-            tom = requireNotNull(packet.utbetalingslinjer().map { it.tom }.max()),
+            fom = requireNotNull(packet.utbetalingslinjer().map { it.fom }.minOrNull()),
+            tom = requireNotNull(packet.utbetalingslinjer().map { it.tom }.maxOrNull()),
             saksbehandlerId = packet["saksbehandlerEpost"].asText(),
             dato = packet["annullertAvSaksbehandler"].asLocalDateTime(),
             linjer = packet.utbetalingslinjer()

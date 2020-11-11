@@ -9,8 +9,8 @@ import no.nav.helse.log
 class VedtakMediator(
     private val pdfClient: PdfClient,
     private val joarkClient: JoarkClient
-) {
-    internal fun opprettVedtak(vedtakMessage: VedtakMessage) {
+){
+    internal fun opprettVedtak(vedtakMessage: Vedtak) {
         runBlocking {
             val pdf = pdfClient.hentVedtakPdf(vedtakMessage.toVedtakPdfPayload())
             val journalpostPayload = JournalpostPayload(

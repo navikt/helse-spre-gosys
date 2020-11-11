@@ -44,6 +44,7 @@ class VedtakRiver(
         sikkerLogg.info(packet.toJson())
 
         try {
+            val vedtak = VedtakMessage(packet).tilVedtak()
             vedtakMediator.opprettVedtak(VedtakMessage(packet))
         } catch (error: RuntimeException) {
             log.error("Kritisk feil, stopper lytter og ber om restart, se sikker logg for fullstendig feilmelding")

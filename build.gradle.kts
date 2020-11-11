@@ -5,6 +5,7 @@ val ktorVersion = "1.4.0"
 
 plugins {
     kotlin("jvm") version "1.4.0"
+    kotlin("plugin.serialization") version "1.4.0"
 }
 
 group = "no.nav.helse"
@@ -22,7 +23,9 @@ dependencies {
     implementation("io.ktor:ktor-auth-jwt:$ktorVersion") {
         exclude(group = "junit")
     }
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1")
 
+    testImplementation("org.skyscreamer:jsonassert:1.5.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")

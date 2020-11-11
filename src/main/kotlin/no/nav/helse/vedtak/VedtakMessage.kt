@@ -9,8 +9,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import kotlin.math.roundToInt
 
-class VedtakMessage private constructor(
+data class VedtakMessage private constructor(
     val hendelseId: UUID,
     val fødselsnummer: String,
     val aktørId: String,
@@ -69,6 +70,24 @@ class VedtakMessage private constructor(
             }
         )
 
+    constructor(vedtak: Vedtak) :
+        this(
+            hendelseId = vedtak.`@id`,
+            opprettet = vedtak.`@opprettet`,
+            fødselsnummer = vedtak.fødselsnummer,
+            aktørId = vedtak.aktørId,
+            fom = vedtak.fom,
+            tom = vedtak.tom,
+            organisasjonsnummer = vedtak.organisasjonsnummer,
+            gjenståendeSykedager = vedtak.gjenståendeSykedager,
+            automatiskBehandling = vedtak.automatiskBehandling,
+            godkjentAv = vedtak.godkjentAv,
+            maksdato = vedtak.maksdato,
+            sykepengegrunnlag = vedtak.sykepengegrunnlag,
+            utbetaling = vedtak.utbetalt.find { it.fagområde == no.nav.helse.vedtak.Utbetaling.Fagområde.SPREF }!!.let { Utbetaling.fromData( it ) },
+            ikkeUtbetalteDager = vedtak.ikkeUtbetalteDager.map { IkkeUtbetaltDag(it) }
+        )
+
     internal fun toVedtakPdfPayload() = VedtakPdfPayload(
         fagsystemId = utbetaling.fagsystemId,
         totaltTilUtbetaling = utbetaling.totalbeløp,
@@ -124,8 +143,26 @@ class VedtakMessage private constructor(
         val totalbeløp: Int,
         val utbetalingslinjer: List<Utbetalingslinje>
     ) {
+        companion object {
+            fun fromData(data: no.nav.helse.vedtak.Utbetaling): Utbetaling {
+                return Utbetaling(
+                    fagområde= Fagområde.Fagområde.fromData(data.fagområde),
+                    fagsystemId=data.fagsystemId,
+                    totalbeløp=data.totalbeløp,
+                    utbetalingslinjer=data.utbetalingslinjer.map { Utbetalingslinje(it) }
+                )
+            }
+        }
+
         enum class Fagområde {
-            SPREF
+            SPREF;
+
+            object Fagområde {
+                fun fromData(fagområde: no.nav.helse.vedtak.Utbetaling.Fagområde): Utbetaling.Fagområde {
+                    if(fagområde == no.nav.helse.vedtak.Utbetaling.Fagområde.SPREF) return SPREF
+                    throw RuntimeException("Fagområde $fagområde finnes ikke.")
+                }
+            }
         }
 
         data class Utbetalingslinje(
@@ -135,13 +172,29 @@ class VedtakMessage private constructor(
             val grad: Int,
             val beløp: Int,
             val mottaker: String
-        )
+        ) {
+            constructor(utbetalingslinje: no.nav.helse.vedtak.Utbetaling.Utbetalingslinje) :
+                this(
+                    dagsats=utbetalingslinje.dagsats,
+                    fom=utbetalingslinje.fom,
+                    tom=utbetalingslinje.tom,
+                    grad=utbetalingslinje.grad.roundToInt(),
+                    beløp=utbetalingslinje.beløp,
+                    mottaker="arbeidsgiver"
+                )
+        }
     }
 
     data class IkkeUtbetaltDag(
         val dato: LocalDate,
         val type: String
-    )
+    ) {
+        constructor(ikkeUtbetaltDag: no.nav.helse.vedtak.IkkeUtbetaltDag) :
+            this(
+                dato=ikkeUtbetaltDag.dato,
+                type=ikkeUtbetaltDag.type
+            )
+    }
 }
 
 internal fun Iterable<VedtakMessage.IkkeUtbetaltDag>.settSammenIkkeUtbetalteDager(): List<VedtakMessage.DagAcc> = this

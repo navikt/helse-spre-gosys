@@ -7,19 +7,19 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.client.HttpClient
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.*
+import io.ktor.client.features.json.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import no.nav.helse.annullering.AnnulleringMediator
 import no.nav.helse.annullering.AnnulleringRiver
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.MessageProblems
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.vedtak.Vedtak
 import no.nav.helse.vedtak.VedtakMediator
 import no.nav.helse.vedtak.VedtakMessage
 import no.nav.helse.vedtak.VedtakRiver
@@ -32,8 +32,6 @@ internal val objectMapper: ObjectMapper = jacksonObjectMapper()
 
 internal val log: Logger = LoggerFactory.getLogger("spregosys")
 internal val sikkerLogg: Logger = LoggerFactory.getLogger("tjenestekall")
-
-private lateinit var vedtakMediator: VedtakMediator
 
 fun main() {
     val rapidsConnection = launchApplication(System.getenv())
@@ -75,17 +73,16 @@ internal fun Route.adminGrensesnitt(
         post("/utbetaling") {
             log.info("Leser inn utbetalinger")
             val utbetaling = call.receive<ArrayNode>()
-            utbetaling.forEach {
+            utbetaling.forEachIndexed { index, json ->
                 try {
-                    val vedtakMessage = VedtakMessage(
-                        JsonMessage(it.toString(), MessageProblems(it.asText()))
-                    )
+                    val vedtak: Vedtak = Json.decodeFromString(json.toString())
+                    val vedtakMessage = VedtakMessage(vedtak)
                     log.info("Behandler utbetaling {}", vedtakMessage.hendelseId)
-                    sikkerLogg.info(it.toString())
+                    sikkerLogg.info(json.toString())
                     vedtakMediator.opprettVedtak(vedtakMessage)
                 } catch (error: RuntimeException) {
                     log.error("Kritisk feil, se sikker logg for fullstendig feilmelding")
-                    sikkerLogg.error("Kritisk feil", error)
+                    sikkerLogg.error("Kritisk feil for index $index", error)
                 }
             }
             call.respond(HttpStatusCode.OK)

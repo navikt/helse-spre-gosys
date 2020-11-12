@@ -17,9 +17,9 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.helse.annullering.AnnulleringMediator
 import no.nav.helse.annullering.AnnulleringRiver
+import no.nav.helse.io.IO
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.vedtak.Vedtak
 import no.nav.helse.vedtak.VedtakMediator
 import no.nav.helse.vedtak.VedtakMessage
 import no.nav.helse.vedtak.VedtakRiver
@@ -75,7 +75,7 @@ internal fun Route.adminGrensesnitt(
             val utbetaling = call.receive<ArrayNode>()
             utbetaling.forEachIndexed { index, json ->
                 try {
-                    val vedtak: Vedtak = Json.decodeFromString(json.toString())
+                    val vedtak: IO.Vedtak = Json.decodeFromString(json.toString())
                     val vedtakMessage = VedtakMessage(vedtak)
                     log.info("Behandler utbetaling {}", vedtakMessage.hendelseId)
                     sikkerLogg.info(json.toString())

@@ -1,5 +1,6 @@
 package no.nav.helse.vedtak
 
+import no.nav.helse.io.*
 import no.nav.helse.log
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.asLocalDate
@@ -70,7 +71,7 @@ data class VedtakMessage private constructor(
             }
         )
 
-    constructor(vedtak: Vedtak) :
+    constructor(vedtak: IO.Vedtak) :
         this(
             hendelseId = vedtak.`@id`,
             opprettet = vedtak.`@opprettet`,
@@ -84,7 +85,7 @@ data class VedtakMessage private constructor(
             godkjentAv = vedtak.godkjentAv,
             maksdato = vedtak.maksdato,
             sykepengegrunnlag = vedtak.sykepengegrunnlag,
-            utbetaling = vedtak.utbetalt.find { it.fagområde == no.nav.helse.vedtak.Utbetaling.Fagområde.SPREF }!!.let { Utbetaling.fromData( it ) },
+            utbetaling = Utbetaling(vedtak.utbetalt.find { it.fagområde == IO.Fagområde.SPREF }!!),
             ikkeUtbetalteDager = vedtak.ikkeUtbetalteDager.map { IkkeUtbetaltDag(it) }
         )
 
@@ -143,23 +144,20 @@ data class VedtakMessage private constructor(
         val totalbeløp: Int,
         val utbetalingslinjer: List<Utbetalingslinje>
     ) {
-        companion object {
-            fun fromData(data: no.nav.helse.vedtak.Utbetaling): Utbetaling {
-                return Utbetaling(
-                    fagområde= Fagområde.Fagområde.fromData(data.fagområde),
-                    fagsystemId=data.fagsystemId,
-                    totalbeløp=data.totalbeløp,
-                    utbetalingslinjer=data.utbetalingslinjer.map { Utbetalingslinje(it) }
-                )
-            }
-        }
+        constructor(rådata: IO.Utbetaling) :
+            this (
+                fagområde= Fagområde.valueOf(rådata.fagområde),
+                fagsystemId=rådata.fagsystemId,
+                totalbeløp=rådata.totalbeløp,
+                utbetalingslinjer=rådata.utbetalingslinjer.map { Utbetalingslinje(it) }
+            )
 
         enum class Fagområde {
             SPREF;
 
-            object Fagområde {
-                fun fromData(fagområde: no.nav.helse.vedtak.Utbetaling.Fagområde): Utbetaling.Fagområde {
-                    if(fagområde == no.nav.helse.vedtak.Utbetaling.Fagområde.SPREF) return SPREF
+            companion object {
+                fun valueOf(fagområde: IO.Fagområde): Fagområde {
+                    if(fagområde == IO.Fagområde.SPREF) return SPREF
                     throw RuntimeException("Fagområde $fagområde finnes ikke.")
                 }
             }
@@ -173,13 +171,13 @@ data class VedtakMessage private constructor(
             val beløp: Int,
             val mottaker: String
         ) {
-            constructor(utbetalingslinje: no.nav.helse.vedtak.Utbetaling.Utbetalingslinje) :
+            constructor(rådata: IO.Utbetalingslinje) :
                 this(
-                    dagsats=utbetalingslinje.dagsats,
-                    fom=utbetalingslinje.fom,
-                    tom=utbetalingslinje.tom,
-                    grad=utbetalingslinje.grad.roundToInt(),
-                    beløp=utbetalingslinje.beløp,
+                    dagsats=rådata.dagsats,
+                    fom=rådata.fom,
+                    tom=rådata.tom,
+                    grad=rådata.grad.roundToInt(),
+                    beløp=rådata.beløp,
                     mottaker="arbeidsgiver"
                 )
         }
@@ -189,10 +187,10 @@ data class VedtakMessage private constructor(
         val dato: LocalDate,
         val type: String
     ) {
-        constructor(ikkeUtbetaltDag: no.nav.helse.vedtak.IkkeUtbetaltDag) :
+        constructor(rådata: IO.IkkeUtbetaltDag) :
             this(
-                dato=ikkeUtbetaltDag.dato,
-                type=ikkeUtbetaltDag.type
+                dato=rådata.dato,
+                type=rådata.type
             )
     }
 }

@@ -10,7 +10,7 @@ class VedtakMediator(
     private val pdfClient: PdfClient,
     private val joarkClient: JoarkClient
 ){
-    internal fun opprettVedtak(vedtakMessage: Vedtak) {
+    internal fun opprettVedtak(vedtakMessage: VedtakMessage) {
         runBlocking {
             val pdf = pdfClient.hentVedtakPdf(vedtakMessage.toVedtakPdfPayload())
             val journalpostPayload = JournalpostPayload(

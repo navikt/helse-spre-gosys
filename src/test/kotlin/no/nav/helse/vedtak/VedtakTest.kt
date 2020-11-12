@@ -3,6 +3,7 @@ package no.nav.helse.vedtak
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.helse.io.IO
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.skyscreamer.jsonassert.JSONAssert
@@ -12,7 +13,7 @@ class VedtakTest {
     @Test
     fun `serialisering og deserialisering av vedtakjson`() {
         val format = Json { prettyPrint = true }
-        val serialisert: List<Vedtak> = format.decodeFromString(vedtakMessage)
+        val serialisert: List<IO.Vedtak> = format.decodeFromString(vedtakMessage)
         val deserialisert: String = format.encodeToString(serialisert)
 
         JSONAssert.assertEquals(vedtakMessage, deserialisert, true)

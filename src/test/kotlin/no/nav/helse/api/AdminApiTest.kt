@@ -11,7 +11,7 @@ import io.mockk.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.helse.*
-import no.nav.helse.vedtak.Vedtak
+import no.nav.helse.io.IO
 import no.nav.helse.vedtak.VedtakMediator
 import no.nav.helse.vedtak.VedtakMessage
 import no.nav.helse.vedtak.VedtakPdfPayload
@@ -29,7 +29,6 @@ class AdminApiTest {
     @Test
     fun `ende til ende`() {
         val slot = mutableListOf<VedtakPdfPayload>()
-
         val pdfClient: PdfClient = mockk(relaxed = true)
         val joarkClient: JoarkClient = mockk(relaxed = true)
         val vedtakMediator = VedtakMediator(pdfClient, joarkClient)
@@ -48,7 +47,7 @@ class AdminApiTest {
                 addHeader(HttpHeaders.ContentType, "application/json")
                 setBody(vedtakMessageJson)
             }) {
-                val vedtak: List<Vedtak> = Json.decodeFromString(vedtakMessageJson)
+                val vedtak: List<IO.Vedtak> = Json.decodeFromString(vedtakMessageJson)
 
                 assertEquals(HttpStatusCode.OK, response.status())
                 coVerify(exactly = 2) {
@@ -76,7 +75,7 @@ class AdminApiTest {
                 setBody(vedtakMessageJson)
             }) {
                 assertEquals(HttpStatusCode.OK, response.status())
-                val vedtak: List<Vedtak> = Json.decodeFromString(vedtakMessageJson)
+                val vedtak: List<IO.Vedtak> = Json.decodeFromString(vedtakMessageJson)
                 verify(exactly = 1) {
                     mediator.opprettVedtak(
                         VedtakMessage(vedtak[0])

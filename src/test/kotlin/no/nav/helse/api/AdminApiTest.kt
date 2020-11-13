@@ -1,5 +1,6 @@
 package no.nav.helse.api
 
+import com.fasterxml.jackson.core.util.ByteArrayBuilder
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.features.*
@@ -15,7 +16,7 @@ import no.nav.helse.io.IO
 import no.nav.helse.vedtak.VedtakMediator
 import no.nav.helse.vedtak.VedtakMessage
 import no.nav.helse.vedtak.VedtakPdfPayload
-import org.intellij.lang.annotations.Language
+import no.nav.helse.io.mockUtbetalinger
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
@@ -28,10 +29,11 @@ class AdminApiTest {
 
     @Test
     fun `ende til ende`() {
-        val slot = mutableListOf<VedtakPdfPayload>()
+        val format = Json { ignoreUnknownKeys = true }
         val pdfClient: PdfClient = mockk(relaxed = true)
         val joarkClient: JoarkClient = mockk(relaxed = true)
         val vedtakMediator = VedtakMediator(pdfClient, joarkClient)
+        val slot = mutableListOf<VedtakPdfPayload>()
 
         coEvery { pdfClient.hentVedtakPdf(capture(slot)) } returns ""
         coEvery { joarkClient.opprettJournalpost(any(), any()) } returns true
@@ -45,18 +47,23 @@ class AdminApiTest {
                 val userpass = Base64.getEncoder().encodeToString("admin:hunter2".toByteArray())
                 addHeader(HttpHeaders.Authorization, "Basic $userpass")
                 addHeader(HttpHeaders.ContentType, "application/json")
-                setBody(vedtakMessageJson)
+                setBody(vedtakAsByteArray(mockUtbetalinger))
             }) {
-                val vedtak: List<IO.Vedtak> = Json.decodeFromString(vedtakMessageJson)
-
                 assertEquals(HttpStatusCode.OK, response.status())
-                coVerify(exactly = 2) {
+
+                coVerify(exactly = mockUtbetalinger.size) {
                     joarkClient.opprettJournalpost(any(), any())
                     pdfClient.hentVedtakPdf(any())
                 }
-                assertEquals(slot[0].linjer[0].fom, vedtak[0].utbetalt[0].utbetalingslinjer[0].fom)
-                assertEquals(slot[0].fagsystemId, vedtak[0].utbetalt[0].fagsystemId)
-                assertEquals(slot[1].ikkeUtbetalteDager[0].grunn, "Ferie/Permisjon")
+
+                mockUtbetalinger.forEachIndexed { index, it ->
+                    val vedtak: IO.Vedtak = format.decodeFromString(it)
+                    assertEquals(slot[index].fagsystemId, vedtak.utbetalt[0].fagsystemId)
+                    assertEquals(
+                        slot[index].linjer.getOrNull(0)?.fom,
+                        vedtak.utbetalt.getOrNull(0)?.utbetalingslinjer?.getOrNull(0)?.fom
+                    )
+                }
             }
         }
     }
@@ -72,14 +79,14 @@ class AdminApiTest {
                 val userpass = Base64.getEncoder().encodeToString("admin:hunter2".toByteArray())
                 addHeader(HttpHeaders.Authorization, "Basic $userpass")
                 addHeader(HttpHeaders.ContentType, "application/json")
-                setBody(vedtakMessageJson)
+                setBody(vedtakAsByteArray(mockUtbetalinger))
             }) {
                 assertEquals(HttpStatusCode.OK, response.status())
-                val vedtak: List<IO.Vedtak> = Json.decodeFromString(vedtakMessageJson)
+
+                val format = Json { ignoreUnknownKeys = true }
+                val vedtak: List<IO.Vedtak> = mockUtbetalinger.map(format::decodeFromString)
                 verify(exactly = 1) {
-                    mediator.opprettVedtak(
-                        VedtakMessage(vedtak[0])
-                    )
+                    mediator.opprettVedtak(VedtakMessage(vedtak[0]))
                 }
             }
         }
@@ -96,7 +103,7 @@ class AdminApiTest {
                 val userpass = Base64.getEncoder().encodeToString("admin:🅱️".toByteArray())
                 addHeader(HttpHeaders.Authorization, "Basic $userpass")
                 addHeader(HttpHeaders.ContentType, "application/json")
-                setBody(vedtakMessageJson)
+                setBody(vedtakAsByteArray(mockUtbetalinger))
             }) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
                 verify(exactly = 0) { mediator.opprettVedtak(any()) }
@@ -104,149 +111,21 @@ class AdminApiTest {
         }
     }
 
+    private fun vedtakAsByteArray(list: List<String>): ByteArray {
+        val byteArray = ByteArrayBuilder()
+        byteArray.write("[".toByteArray())
+        list.forEachIndexed { index, it ->
+            byteArray.write(it.toByteArray())
+            if (index != list.size - 1) {
+                byteArray.write(",".toByteArray())
+            }
+        }
+        byteArray.write("]".toByteArray())
+        return byteArray.toByteArray()
+    }
+
     @AfterEach
     fun setupAfterEach() {
         clearMocks(mediator)
     }
-
-    @Language("json")
-    private val vedtakMessageJson: String = """
-    [{
-        "aktørId": "1427484794278",
-        "fødselsnummer": "11109726259",
-        "organisasjonsnummer": "910825526",
-        "hendelser": [
-            "57697a8b-d25b-4589-86d3-1028d843b173",
-            "3fab565e-e4f1-4d80-a4eb-f1f83f008d42",
-            "5821120e-1d4e-48d6-b73c-4d7d5cc4979b"
-        ],
-        "utbetalt": [
-            {
-                "mottaker": "910825526",
-                "fagområde": "SPREF",
-                "fagsystemId": "MB3Z5KXZMFCLHBXHEGMNPZ2QNE",
-                "totalbeløp": 6300,
-                "utbetalingslinjer": [
-                    {
-                        "fom": "2020-09-23",
-                        "tom": "2020-09-30",
-                        "dagsats": 1050,
-                        "beløp": 1050,
-                        "grad": 100.0,
-                        "sykedager": 6
-                    }
-                ]
-            },
-            {
-                "mottaker": "11109726259",
-                "fagområde": "SP",
-                "fagsystemId": "LI25TZVH2FHWLFJN3JZGPN6GT4",
-                "totalbeløp": 0,
-                "utbetalingslinjer": []
-            }
-        ],
-        "ikkeUtbetalteDager": [],
-        "fom": "2020-09-07",
-        "tom": "2020-09-30",
-        "forbrukteSykedager": 6,
-        "gjenståendeSykedager": 242,
-        "godkjentAv": "S151890",
-        "automatiskBehandling": false,
-        "opprettet": "2020-11-06T10:42:24.783454",
-        "sykepengegrunnlag": 273012.0,
-        "månedsinntekt": 22751.0,
-        "maksdato": "2021-09-03",
-        "system_read_count": 0,
-        "system_participating_services": [
-            {
-                "service": "spleis",
-                "instance": "spleis-857699d9b9-wzrk5",
-                "time": "2020-11-06T10:43:33.925252"
-            }
-        ],
-        "@event_name": "utbetalt",
-        "@id": "34df5416-ba6d-429b-8746-abe5125b9530",
-        "@opprettet": "2020-11-06T10:43:33.925287",
-        "@forårsaket_av": {
-            "event_name": "behov",
-            "id": "22efebd0-a2d1-45d7-b4b0-df47a1289f72",
-            "opprettet": "2020-11-06T10:43:33.573795"
-        }
-    },
-    {
-        "aktørId": "1427484794278",
-        "fødselsnummer": "11109726259",
-        "organisasjonsnummer": "910825526",
-        "hendelser": [
-            "57697a8b-d25b-4589-86d3-1028d843b173",
-            "3fab565e-e4f1-4d80-a4eb-f1f83f008d42",
-            "5821120e-1d4e-48d6-b73c-4d7d5cc4979b"
-        ],
-        "utbetalt": [
-            {
-                "mottaker": "910825526",
-                "fagområde": "SPREF",
-                "fagsystemId": "MB3Z5KXZMFCLHBXHEGMNPZ2QNE",
-                "totalbeløp": 6300,
-                "utbetalingslinjer": [
-                    {
-                        "fom": "2020-09-23",
-                        "tom": "2020-09-30",
-                        "dagsats": 1050,
-                        "beløp": 1050,
-                        "grad": 100.0,
-                        "sykedager": 6
-                    }
-                ]
-            },
-            {
-                "mottaker": "11109726259",
-                "fagområde": "SP",
-                "fagsystemId": "LI25TZVH2FHWLFJN3JZGPN6GT4",
-                "totalbeløp": 0,
-                "utbetalingslinjer": []
-            }
-        ],
-        "ikkeUtbetalteDager": [
-              {
-                "dato": "2020-10-21",
-                "type": "Fridag"
-              },
-              {
-                "dato": "2020-10-22",
-                "type": "Fridag"
-              },
-              {
-                "dato": "2020-10-23",
-                "type": "Fridag"
-              }
-        ],
-        "fom": "2020-09-07",
-        "tom": "2020-09-30",
-        "forbrukteSykedager": 6,
-        "gjenståendeSykedager": 242,
-        "godkjentAv": "S151890",
-        "automatiskBehandling": false,
-        "opprettet": "2020-11-06T10:42:24.783454",
-        "sykepengegrunnlag": 273012.0,
-        "månedsinntekt": 22751.0,
-        "maksdato": "2021-09-03",
-        "system_read_count": 0,
-        "system_participating_services": [
-            {
-                "service": "spleis",
-                "instance": "spleis-857699d9b9-wzrk5",
-                "time": "2020-11-06T10:43:33.925252"
-            }
-        ],
-        "@event_name": "utbetalt",
-        "@id": "34df5416-ba6d-429b-8746-abe5125b9530",
-        "@opprettet": "2020-11-06T10:43:33.925287",
-        "@forårsaket_av": {
-            "event_name": "behov",
-            "id": "22efebd0-a2d1-45d7-b4b0-df47a1289f72",
-            "opprettet": "2020-11-06T10:43:33.573795"
-        }
-    }]
-    """
 }

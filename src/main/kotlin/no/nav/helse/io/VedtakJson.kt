@@ -15,38 +15,16 @@ class IO {
         val fødselsnummer: String,
         val organisasjonsnummer: String,
         val gjenståendeSykedager: Int,
-        val hendelser: List<UUID>,
         val utbetalt: List<Utbetaling>,
         val ikkeUtbetalteDager: List<IkkeUtbetaltDag>,
         val fom: LocalDate,
         val tom: LocalDate,
-        val forbrukteSykedager: Int,
         val godkjentAv: String,
         val automatiskBehandling: Boolean,
-        val opprettet: LocalDateTime,
         val sykepengegrunnlag: Double,
-        val månedsinntekt: Double,
         val maksdato: LocalDate,
-        val system_read_count: Int,
-        val system_participating_services: List<ParticipatingService>,
-        val `@event_name` : String,
         val `@id`: UUID,
         val `@opprettet`: LocalDateTime,
-        val `@forårsaket_av`: ForårsaketAv
-    )
-
-    @Serializable
-    data class ParticipatingService (
-        val service: String,
-        val instance: String,
-        val time: LocalDateTime
-    )
-
-    @Serializable
-    data class ForårsaketAv (
-        val event_name: String,
-        val id: UUID,
-        val opprettet: LocalDateTime
     )
 
     @Serializable

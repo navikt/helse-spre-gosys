@@ -75,7 +75,8 @@ internal fun Route.adminGrensesnitt(
             val utbetaling = call.receive<ArrayNode>()
             utbetaling.forEachIndexed { index, json ->
                 try {
-                    val vedtak: IO.Vedtak = Json.decodeFromString(json.toString())
+                    val format = Json { ignoreUnknownKeys = true }
+                    val vedtak: IO.Vedtak = format.decodeFromString(json.toString())
                     val vedtakMessage = VedtakMessage(vedtak)
                     log.info("Behandler utbetaling {}", vedtakMessage.hendelseId)
                     sikkerLogg.info(json.toString())

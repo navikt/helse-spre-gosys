@@ -33,6 +33,8 @@ spec:
   vault:
     enabled: true
     paths:
+      - mountPath: /var/run/secrets/nais.io/vault
+        kvPath: /kv/prod/fss/spre-gosys/tbd
       - mountPath: /var/run/secrets/nais.io/service_user
         kvPath: /serviceuser/data/prod/srvspregosys
   env:

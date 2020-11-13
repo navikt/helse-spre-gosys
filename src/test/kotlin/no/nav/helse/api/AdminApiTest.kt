@@ -1,31 +1,30 @@
 package no.nav.helse.api
 
 import com.fasterxml.jackson.core.util.ByteArrayBuilder
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.jackson.*
-import io.ktor.routing.*
 import io.ktor.server.testing.*
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import no.nav.helse.*
+import no.nav.helse.JoarkClient
+import no.nav.helse.PdfClient
 import no.nav.helse.io.IO
+import no.nav.helse.io.mockUtbetalinger
 import no.nav.helse.vedtak.VedtakMediator
 import no.nav.helse.vedtak.VedtakMessage
 import no.nav.helse.vedtak.VedtakPdfPayload
-import no.nav.helse.io.mockUtbetalinger
-import org.junit.jupiter.api.AfterEach
+import no.nav.helse.wiring
 import org.junit.jupiter.api.Test
-
 import java.util.*
 import kotlin.test.assertEquals
 
 class AdminApiTest {
-
-    private val mediator: VedtakMediator = mockk(relaxed = true)
+    private val apiSecret = "hunter2"
+    private val wrongApiSecret = "\uD83C\uDD71️"
+    private val envMedApiSecret = mapOf("ADMIN_SECRET" to "hunter2")
 
     @Test
     fun `ende til ende`() {
@@ -35,20 +34,12 @@ class AdminApiTest {
         val vedtakMediator = VedtakMediator(pdfClient, joarkClient)
         val slot = mutableListOf<VedtakPdfPayload>()
 
+
         coEvery { pdfClient.hentVedtakPdf(capture(slot)) } returns ""
         coEvery { joarkClient.opprettJournalpost(any(), any()) } returns true
 
-        withTestApplication({
-            install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
-            basicAuthentication("hunter2")
-            routing { authenticate("admin") { adminGrensesnitt(vedtakMediator) } }
-        }) {
-            with(handleRequest(HttpMethod.Post, "/admin/utbetaling") {
-                val userpass = Base64.getEncoder().encodeToString("admin:hunter2".toByteArray())
-                addHeader(HttpHeaders.Authorization, "Basic $userpass")
-                addHeader(HttpHeaders.ContentType, "application/json")
-                setBody(vedtakAsByteArray(mockUtbetalinger))
-            }) {
+        withTestApplication({ wiring(envMedApiSecret, vedtakMediator) }) {
+            with(kallUtbetalinger(apiSecret)) {
                 assertEquals(HttpStatusCode.OK, response.status())
 
                 coVerify(exactly = mockUtbetalinger.size) {
@@ -68,19 +59,20 @@ class AdminApiTest {
         }
     }
 
+    private fun TestApplicationEngine.kallUtbetalinger(apiSecret: String): TestApplicationCall {
+        return handleRequest(HttpMethod.Post, "/admin/utbetaling") {
+            val userpass = Base64.getEncoder().encodeToString("admin:$apiSecret".toByteArray())
+            addHeader(HttpHeaders.Authorization, "Basic $userpass")
+            addHeader(HttpHeaders.ContentType, "application/json")
+            setBody(vedtakAsByteArray(mockUtbetalinger))
+        }
+    }
+
     @Test
     fun `oppslag på utbetaling`() {
-        withTestApplication({
-            install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
-            basicAuthentication("hunter2")
-            routing { authenticate("admin") { adminGrensesnitt(mediator) } }
-        }) {
-            with(handleRequest(HttpMethod.Post, "/admin/utbetaling") {
-                val userpass = Base64.getEncoder().encodeToString("admin:hunter2".toByteArray())
-                addHeader(HttpHeaders.Authorization, "Basic $userpass")
-                addHeader(HttpHeaders.ContentType, "application/json")
-                setBody(vedtakAsByteArray(mockUtbetalinger))
-            }) {
+        val mediator: VedtakMediator = mockk(relaxed = true)
+        withTestApplication({ wiring(envMedApiSecret, mediator) }) {
+            with(kallUtbetalinger(apiSecret)) {
                 assertEquals(HttpStatusCode.OK, response.status())
 
                 val format = Json { ignoreUnknownKeys = true }
@@ -94,22 +86,17 @@ class AdminApiTest {
 
     @Test
     fun `unaut️horized uten autentisering`() {
+        val mediator: VedtakMediator = mockk(relaxed = true)
         withTestApplication({
-            install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
-            basicAuthentication("hunter2")
-            routing { authenticate("admin") { adminGrensesnitt(mediator) } }
+            wiring(envMedApiSecret, mediator)
         }) {
-            with(handleRequest(HttpMethod.Post, "/admin/utbetaling") {
-                val userpass = Base64.getEncoder().encodeToString("admin:🅱️".toByteArray())
-                addHeader(HttpHeaders.Authorization, "Basic $userpass")
-                addHeader(HttpHeaders.ContentType, "application/json")
-                setBody(vedtakAsByteArray(mockUtbetalinger))
-            }) {
+            with(kallUtbetalinger(wrongApiSecret)) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
                 verify(exactly = 0) { mediator.opprettVedtak(any()) }
             }
         }
     }
+
 
     private fun vedtakAsByteArray(list: List<String>): ByteArray {
         val byteArray = ByteArrayBuilder()
@@ -122,10 +109,5 @@ class AdminApiTest {
         }
         byteArray.write("]".toByteArray())
         return byteArray.toByteArray()
-    }
-
-    @AfterEach
-    fun setupAfterEach() {
-        clearMocks(mediator)
     }
 }

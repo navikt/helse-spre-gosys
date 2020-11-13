@@ -9,7 +9,9 @@ import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.*
 import io.ktor.client.features.json.*
+import io.ktor.features.*
 import io.ktor.http.*
+import io.ktor.jackson.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -53,17 +55,25 @@ fun launchApplication(
     val annulleringMediator = AnnulleringMediator(pdfClient, joarkClient)
 
     return RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(environment)).withKtorModule {
-        basicAuthentication(environment.getValue("ADMIN_SECRET"))
-        routing {
-            authenticate("admin") {
-                adminGrensesnitt(vedtakMediator)
-            }
-        }
+        wiring(environment, vedtakMediator)
     }.build()
         .apply {
             VedtakRiver(this, vedtakMediator)
             AnnulleringRiver(this, annulleringMediator)
         }
+}
+
+fun Application.wiring(
+    environment: Map<String, String>,
+    vedtakMediator: VedtakMediator
+) {
+    install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
+    basicAuthentication(environment.getValue("ADMIN_SECRET"))
+    routing {
+        authenticate("admin") {
+            adminGrensesnitt(vedtakMediator)
+        }
+    }
 }
 
 internal fun Route.adminGrensesnitt(

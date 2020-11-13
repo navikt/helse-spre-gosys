@@ -83,7 +83,7 @@ internal fun Route.adminGrensesnitt(
                     vedtakMediator.opprettVedtak(vedtakMessage)
                 } catch (error: RuntimeException) {
                     log.error("Kritisk feil, se sikker logg for fullstendig feilmelding")
-                    sikkerLogg.error("Kritisk feil for index $index", error)
+                    sikkerLogg.error("Kritisk feil for index $index", error, json.toString())
                 }
             }
             call.respond(HttpStatusCode.OK)

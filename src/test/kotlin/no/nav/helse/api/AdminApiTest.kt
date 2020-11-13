@@ -19,6 +19,7 @@ import no.nav.helse.vedtak.VedtakPdfPayload
 import no.nav.helse.io.mockUtbetalinger
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import java.nio.charset.StandardCharsets
 
 import java.util.*
 import kotlin.test.assertEquals
@@ -47,7 +48,10 @@ class AdminApiTest {
                 val userpass = Base64.getEncoder().encodeToString("admin:hunter2".toByteArray())
                 addHeader(HttpHeaders.Authorization, "Basic $userpass")
                 addHeader(HttpHeaders.ContentType, "application/json")
-                setBody(vedtakAsByteArray(mockUtbetalinger))
+                addHeader(HttpHeaders.ContentEncoding, StandardCharsets.UTF_8.toString())
+                val body = vedtakAsByteArray(mockUtbetalinger)
+                println("bodyprint" + body)
+                setBody(body)
             }) {
                 assertEquals(HttpStatusCode.OK, response.status())
 
@@ -111,7 +115,7 @@ class AdminApiTest {
         }
     }
 
-    private fun vedtakAsByteArray(list: List<String>): ByteArray {
+    private fun vedtakAsByteArray(list: List<String>): String {
         val byteArray = ByteArrayBuilder()
         byteArray.write("[".toByteArray())
         list.forEachIndexed { index, it ->
@@ -121,7 +125,7 @@ class AdminApiTest {
             }
         }
         byteArray.write("]".toByteArray())
-        return byteArray.toByteArray()
+        return byteArray.toString()
     }
 
     @AfterEach

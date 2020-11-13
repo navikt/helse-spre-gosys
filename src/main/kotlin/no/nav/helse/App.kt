@@ -14,6 +14,7 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.helse.annullering.AnnulleringMediator
 import no.nav.helse.annullering.AnnulleringRiver
@@ -72,18 +73,29 @@ internal fun Route.adminGrensesnitt(
     route("/admin") {
         post("/utbetaling") {
             log.info("Leser inn utbetalinger")
-            val utbetaling = call.receive<ArrayNode>()
-            utbetaling.forEachIndexed { index, json ->
+            val utbetaling = call.receive<String>()
+
+            val format = Json { ignoreUnknownKeys = true }
+
+            println(utbetaling)
+            val vedtakListe: List<IO.Vedtak> =
                 try {
-                    val format = Json { ignoreUnknownKeys = true }
-                    val vedtak: IO.Vedtak = format.decodeFromString(json.toString())
+                     format.decodeFromString(utbetaling)
+                } catch(error: RuntimeException) {
+                    println(error)
+                    throw error
+                }
+
+            vedtakListe.forEachIndexed { index, vedtak ->
+                val vedtakString: String = format.encodeToString(vedtak)
+                try {
                     val vedtakMessage = VedtakMessage(vedtak)
                     log.info("Behandler utbetaling {}", vedtakMessage.hendelseId)
-                    sikkerLogg.info(json.toString())
+                    sikkerLogg.info(vedtakString)
                     vedtakMediator.opprettVedtak(vedtakMessage)
                 } catch (error: RuntimeException) {
                     log.error("Kritisk feil, se sikker logg for fullstendig feilmelding")
-                    sikkerLogg.error("Kritisk feil for index $index", error, json.toString())
+                    sikkerLogg.error("Kritisk feil for index $index", error, vedtakString)
                 }
             }
             call.respond(HttpStatusCode.OK)

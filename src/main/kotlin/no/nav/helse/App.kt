@@ -54,9 +54,7 @@ fun launchApplication(
     val vedtakMediator = VedtakMediator(pdfClient, joarkClient)
     val annulleringMediator = AnnulleringMediator(pdfClient, joarkClient)
 
-    return RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(environment)).withKtorModule {
-        wiring(environment, vedtakMediator)
-    }.build()
+    return RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(environment)).build()
         .apply {
             VedtakRiver(this, vedtakMediator)
             AnnulleringRiver(this, annulleringMediator)

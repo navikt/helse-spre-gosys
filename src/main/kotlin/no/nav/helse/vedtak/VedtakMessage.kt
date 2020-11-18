@@ -123,6 +123,7 @@ data class VedtakMessage private constructor(
                         "MinimumSykdomsgrad" -> "Sykdomsgrad under 20%"
                         "Fridag" -> "Ferie/Permisjon"
                         "Arbeidsdag" -> "Arbeidsdag"
+                        "EtterDødsdato" -> "Personen er død"
                         else -> {
                             log.error("Ukjent dagtype $it")
                             "Ukjent dagtype: \"${it.type}\""

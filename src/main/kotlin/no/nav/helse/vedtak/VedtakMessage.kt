@@ -1,6 +1,6 @@
 package no.nav.helse.vedtak
 
-import no.nav.helse.io.*
+import no.nav.helse.io.IO
 import no.nav.helse.log
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.asLocalDate
@@ -9,7 +9,7 @@ import no.nav.helse.rapids_rivers.asOptionalLocalDate
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
+import java.util.*
 import kotlin.math.roundToInt
 
 data class VedtakMessage private constructor(
@@ -123,6 +123,7 @@ data class VedtakMessage private constructor(
                         "MinimumSykdomsgrad" -> "Sykdomsgrad under 20%"
                         "Fridag" -> "Ferie/Permisjon"
                         "Arbeidsdag" -> "Arbeidsdag"
+                        "EtterDødsdato" -> "Personen er død"
                         else -> {
                             log.error("Ukjent dagtype $it")
                             "Ukjent dagtype: \"${it.type}\""
@@ -195,16 +196,17 @@ data class VedtakMessage private constructor(
     }
 }
 
-internal fun Iterable<VedtakMessage.IkkeUtbetaltDag>.settSammenIkkeUtbetalteDager(): List<VedtakMessage.DagAcc> = this
-    .map { VedtakMessage.DagAcc(it.dato, it.dato, it.type) }
-    .fold(listOf()) { acc, value ->
-        if (acc.isNotEmpty()
-            && (acc.last().type == value.type || (acc.last().type == "Arbeidsdag") && value.type == "Fridag")
-            && acc.last().tom.plusDays(1) == value.tom
+internal fun Iterable<VedtakMessage.IkkeUtbetaltDag>.settSammenIkkeUtbetalteDager(): List<VedtakMessage.DagAcc> =
+    map { VedtakMessage.DagAcc(it.dato, it.dato, it.type) }
+    .fold(listOf()) { accumulator, avvistDag ->
+        val sisteInnslag = accumulator.last()
+        if (accumulator.isNotEmpty()
+            && (sisteInnslag.type == avvistDag.type || (sisteInnslag.type == "Arbeidsdag") && avvistDag.type == "Fridag")
+            && sisteInnslag.tom.plusDays(1) == avvistDag.tom
         ) {
-            acc.last().tom = value.tom
-            return@fold acc
+            sisteInnslag.tom = avvistDag.tom
+            return@fold accumulator
         }
-        acc + value
+        accumulator + avvistDag
     }
 

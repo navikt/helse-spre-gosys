@@ -14,7 +14,6 @@ import no.nav.helse.PdfClient
 import no.nav.helse.io.IO
 import no.nav.helse.io.mockUtbetalinger
 import no.nav.helse.vedtak.VedtakMediator
-import no.nav.helse.vedtak.VedtakMessage
 import no.nav.helse.vedtak.VedtakPdfPayload
 import no.nav.helse.wiring
 import org.junit.jupiter.api.Test
@@ -78,7 +77,7 @@ class AdminApiTest {
                 val format = Json { ignoreUnknownKeys = true }
                 val vedtak: List<IO.Vedtak> = mockUtbetalinger.map(format::decodeFromString)
                 verify(exactly = 1) {
-                    mediator.opprettVedtak(VedtakMessage(vedtak[0]))
+                    mediator.opprettVedtak(VedtakPdfPayload.tilPdfPayload(vedtak[0]), any())
                 }
             }
         }
@@ -92,7 +91,7 @@ class AdminApiTest {
         }) {
             with(kallUtbetalinger(wrongApiSecret)) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
-                verify(exactly = 0) { mediator.opprettVedtak(any()) }
+                verify(exactly = 0) { mediator.opprettVedtak(any(), any()) }
             }
         }
     }

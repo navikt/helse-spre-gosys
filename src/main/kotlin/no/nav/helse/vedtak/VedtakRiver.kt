@@ -2,6 +2,7 @@ package no.nav.helse.vedtak
 
 import com.fasterxml.jackson.databind.JsonNode
 import net.logstash.logback.argument.StructuredArguments.keyValue
+import no.nav.helse.JoarkMetadata
 import no.nav.helse.log
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -9,6 +10,7 @@ import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asLocalDateTime
 import no.nav.helse.sikkerLogg
+import no.nav.helse.vedtak.VedtakPdfPayload.Companion.tilPdfPayload
 import java.util.UUID
 
 class VedtakRiver(
@@ -44,7 +46,7 @@ class VedtakRiver(
         sikkerLogg.info(packet.toJson())
 
         try {
-            vedtakMediator.opprettVedtak(VedtakMessage(packet))
+            vedtakMediator.opprettVedtak(tilPdfPayload(packet), JoarkMetadata(packet))
         } catch (error: RuntimeException) {
             log.error("Kritisk feil, stopper lytter og ber om restart, se sikker logg for fullstendig feilmelding")
             sikkerLogg.error("Kritisk feil, stopper lytter og ber om restart", error)

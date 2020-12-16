@@ -23,7 +23,7 @@ import no.nav.helse.io.IO
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.vedtak.VedtakMediator
-import no.nav.helse.vedtak.VedtakMessage
+import no.nav.helse.vedtak.VedtakPdfPayload.Companion.tilPdfPayload
 import no.nav.helse.vedtak.VedtakRiver
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -85,10 +85,10 @@ internal fun Route.adminGrensesnitt(
                 try {
                     val format = Json { ignoreUnknownKeys = true }
                     val vedtak: IO.Vedtak = format.decodeFromString(json.toString())
-                    val vedtakMessage = VedtakMessage(vedtak)
-                    log.info("Behandler utbetaling {}", vedtakMessage.hendelseId)
+                    log.info("Behandler utbetaling {}", vedtak.`@id`)
                     sikkerLogg.info(json.toString())
-                    vedtakMediator.opprettVedtak(vedtakMessage)
+                    vedtakMediator.opprettVedtak(tilPdfPayload(vedtak), JoarkMetadata(vedtak
+                    ))
                 } catch (error: RuntimeException) {
                     log.error("Kritisk feil, se sikker logg for fullstendig feilmelding")
                     sikkerLogg.error("Kritisk feil for index $index", error, json.toString())

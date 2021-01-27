@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.*
+import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.features.*
 import io.ktor.http.*
@@ -47,6 +48,7 @@ fun launchApplication(
     val stsRestClient = StsRestClient(requireNotNull(environment["STS_URL"]), serviceUser)
     val httpClient = HttpClient {
         install(JsonFeature) { serializer = JacksonSerializer(objectMapper) }
+        install(HttpTimeout) { requestTimeoutMillis = 10000 }
     }
     val joarkClient = JoarkClient(requireNotNull(environment["JOARK_BASE_URL"]), stsRestClient, httpClient)
     val pdfClient = PdfClient(httpClient)

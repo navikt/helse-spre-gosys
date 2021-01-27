@@ -48,9 +48,9 @@ spec:
     - name: KAFKA_CONSUMER_GROUP_ID
       value: spre-gosys-v1
     - name: KAFKA_MAX_RECORDS
-      value: 50
+      value: "50"
     - name: KAFKA_MAX_POLL_INTERVAL_MS
-      value: 500000
+      value: "500000"
     - name: STS_URL
       value: http://security-token-service.default.svc.nais.local
     - name: JOARK_BASE_URL

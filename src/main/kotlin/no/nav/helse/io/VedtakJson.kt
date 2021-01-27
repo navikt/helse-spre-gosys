@@ -1,4 +1,5 @@
 @file:UseSerializers(LocalDateSerializer::class, LocalDateTimeSerializer::class, UUIDSerializer::class)
+@file:Suppress("EXPERIMENTAL_API_USAGE")
 
 package no.nav.helse.io
 

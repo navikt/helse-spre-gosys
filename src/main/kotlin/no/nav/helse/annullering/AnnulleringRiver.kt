@@ -3,11 +3,7 @@ package no.nav.helse.annullering
 import com.fasterxml.jackson.databind.JsonNode
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.log
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.rapids_rivers.River
-import no.nav.helse.rapids_rivers.asLocalDate
-import no.nav.helse.rapids_rivers.asLocalDateTime
+import no.nav.helse.rapids_rivers.*
 import no.nav.helse.sikkerLogg
 
 class AnnulleringRiver(
@@ -37,7 +33,7 @@ class AnnulleringRiver(
         }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext) {
         log.info("Oppdaget annullering-event {}", StructuredArguments.keyValue("id", packet["@id"].asText()))
         sikkerLogg.info(packet.toJson())
 

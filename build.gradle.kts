@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val junitJupiterVersion = "5.6.2"
-val ktorVersion = "1.5.0" //Bør følge rapids and rivers
+val ktorVersion = "1.5.1" //Bør følge rapids and rivers
 
 plugins {
-    kotlin("jvm") version "1.4.21"
-    kotlin("plugin.serialization") version "1.4.21"
+    kotlin("jvm") version "1.4.30"
+    kotlin("plugin.serialization") version "1.4.30"
 }
 
 group = "no.nav.helse"
@@ -16,7 +16,9 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:1.36e685a")
+    implementation("com.github.navikt:rapids-and-rivers:1.5e3ca6a") {
+        exclude(group = "junit")
+    }
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
     implementation("io.ktor:ktor-jackson:$ktorVersion")
@@ -32,12 +34,7 @@ dependencies {
 
     testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
-    testImplementation("io.mockk:mockk:1.10.0")
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_15
-    targetCompatibility = JavaVersion.VERSION_15
+    testImplementation("io.mockk:mockk:1.10.6")
 }
 
 tasks {
